@@ -2,33 +2,36 @@
 
 import * as React from "react";
 
-import { NavMain } from "@/components/ui/sidebar/nav-main";
-import { NavSecondary } from "@/components/ui/sidebar/nav-secondary";
-import { NavUser } from "@/components/ui/sidebar/nav-user";
+import { NavMain } from "@/components/nav-main";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar/sidebar";
+  SidebarRail,
+} from "@/components/ui/sidebar";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
+  LayoutBottomIcon,
   Analytics01Icon,
   CheckListIcon,
   FolderKanbanIcon,
-  ChartRingIcon,
-  SentIcon,
-  TaskDaily01Icon,
+  TaskDaily01Icon
 } from "@hugeicons/core-free-icons";
 
+// This is sample data.
 const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
+  },
+  app: {
+    name: "Acme Inc",
+    logo: <HugeiconsIcon icon={LayoutBottomIcon} strokeWidth={2} />,
+    plan: "Enterprise",
   },
   navMain: [
     {
@@ -81,44 +84,31 @@ const data = {
       ],
     },
   ],
-  navSecondary: [
-    {
-      title: "Soporte",
-      url: "#",
-      icon: <HugeiconsIcon icon={ChartRingIcon} strokeWidth={2} />,
-    },
-    {
-      title: "Feedback",
-      url: "#",
-      icon: <HugeiconsIcon icon={SentIcon} strokeWidth={2} />,
-    },
-  ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<a href="/" />}>
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <HugeiconsIcon icon={TaskDaily01Icon} strokeWidth={2} className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">TaskFlow</span>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <SidebarMenuButton
+          size="lg"
+          className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
+        >
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+            <HugeiconsIcon icon={TaskDaily01Icon} strokeWidth={2} className="size-4" />
+          </div>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-medium">TaskFlow</span>
+          </div>
+        </SidebarMenuButton>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }

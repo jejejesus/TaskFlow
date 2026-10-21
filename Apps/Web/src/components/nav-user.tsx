@@ -15,10 +15,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar/sidebar";
+} from "@/components/ui/sidebar";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { logoutAction } from "@/actions/auth-actions";
 import {
-  MoreVerticalIcon,
+  UnfoldMoreIcon,
   SparklesIcon,
   CheckmarkBadgeIcon,
   CreditCardIcon,
@@ -51,10 +52,10 @@ export function NavUser({
               <span className="truncate font-medium">{user.name}</span>
               <span className="truncate text-xs">{user.email}</span>
             </div>
-            <HugeiconsIcon icon={MoreVerticalIcon} strokeWidth={2} className="ml-auto size-4" />
+            <HugeiconsIcon icon={UnfoldMoreIcon} strokeWidth={2} className="ml-auto size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="min-w-56 rounded-lg"
+            className="w-fit"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
@@ -96,7 +97,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => logoutAction()}>
               <HugeiconsIcon icon={LogoutIcon} strokeWidth={2} />
               Log out
             </DropdownMenuItem>

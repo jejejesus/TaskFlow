@@ -11,7 +11,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/components/ui/sidebar/sidebar";
+} from "@/components/ui/sidebar";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 
@@ -21,7 +21,7 @@ export function NavMain({
   items: {
     title: string;
     url: string;
-    icon: React.ReactNode;
+    icon?: React.ReactNode;
     isActive?: boolean;
     items?: {
       title: string;
