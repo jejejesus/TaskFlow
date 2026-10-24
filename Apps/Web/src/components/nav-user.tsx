@@ -20,9 +20,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { logoutAction } from "@/actions/auth-actions";
 import {
   UnfoldMoreIcon,
-  SparklesIcon,
-  CheckmarkBadgeIcon,
-  CreditCardIcon,
+  User02Icon,
   NotificationIcon,
   LogoutIcon,
 } from "@hugeicons/core-free-icons";
@@ -75,31 +73,27 @@ export function NavUser({
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
+            {/*<DropdownMenuGroup>
               <DropdownMenuItem>
                 <HugeiconsIcon icon={SparklesIcon} strokeWidth={2} />
                 Upgrade to Pro
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator />*/}
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <HugeiconsIcon icon={CheckmarkBadgeIcon} strokeWidth={2} />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <HugeiconsIcon icon={CreditCardIcon} strokeWidth={2} />
-                Billing
+                <HugeiconsIcon icon={User02Icon} strokeWidth={2} />
+                Cuenta
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <HugeiconsIcon icon={NotificationIcon} strokeWidth={2} />
-                Notifications
+                Notificaciones
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logoutAction()}>
               <HugeiconsIcon icon={LogoutIcon} strokeWidth={2} />
-              Log out
+              Cerrar sesión
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

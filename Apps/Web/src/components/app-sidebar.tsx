@@ -14,11 +14,10 @@ import {
 } from "@/components/ui/sidebar";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  LayoutBottomIcon,
   Analytics01Icon,
   CheckListIcon,
   FolderKanbanIcon,
-  TaskDaily01Icon
+  TaskDaily01Icon,
 } from "@hugeicons/core-free-icons";
 
 // This is sample data.
@@ -28,21 +27,16 @@ const data = {
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
-  app: {
-    name: "Acme Inc",
-    logo: <HugeiconsIcon icon={LayoutBottomIcon} strokeWidth={2} />,
-    plan: "Enterprise",
-  },
   navMain: [
     {
-      title: "Dashboard",
+      title: "Inicio",
       url: "/",
       icon: <HugeiconsIcon icon={Analytics01Icon} strokeWidth={2} />,
       isActive: true,
       items: [],
     },
     {
-      title: "Tareas",
+      title: "Mis tareas",
       url: "/tasks",
       icon: <HugeiconsIcon icon={CheckListIcon} strokeWidth={2} />,
       items: [

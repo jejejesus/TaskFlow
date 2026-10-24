@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 using Services.Application.DTOs.Auth;
 using Services.Application.Interfaces.Services;
@@ -82,5 +82,10 @@ public sealed class AuthService(
         }
 
         return tokenGenerator.Generate(user.Id, user.Email!);
+    }
+
+    public async Task LogoutAsync(CancellationToken cancellationToken = default)
+    {
+        await signInManager.SignOutAsync();
     }
 }

@@ -18,7 +18,7 @@ export type AuthActionState = {
   };
 };
 
-function getApiEndpoint(endpoint: "login" | "register"): string {
+function getApiEndpoint(endpoint: "login" | "register" | "logout"): string {
   const rawBase = process.env.API_BASE_URL || "https://localhost:7120/api";
   const cleanBase = rawBase.replace(/\/+$/, "");
   const baseWithApi = cleanBase.endsWith("/api") ? cleanBase : `${cleanBase}/api`;

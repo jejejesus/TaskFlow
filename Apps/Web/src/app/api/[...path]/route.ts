@@ -13,7 +13,7 @@ async function proxyHandler(
   const { path } = await params;
   const targetPath = path.join('/');
 
-  const targetUrl = `${API_BASE_URL}/${targetPath}`;
+  const targetUrl = `${API_BASE_URL.replace(/\/$/, '')}/${targetPath}${request.nextUrl.search}`;
 
   const headers = new Headers();
 
