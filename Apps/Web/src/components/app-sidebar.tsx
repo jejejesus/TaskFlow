@@ -37,7 +37,7 @@ const data = {
     },
     {
       title: "Mis tareas",
-      url: "/tasks",
+      url: "/my-tasks",
       icon: <HugeiconsIcon icon={CheckListIcon} strokeWidth={2} />,
       items: [
         /*{

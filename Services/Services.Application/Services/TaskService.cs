@@ -357,12 +357,12 @@ public sealed class TaskService(
 
         var allowedSortFields = new[]
         {
-        "createdat",
-        "title",
-        "duedate",
-        "priority",
-        "status"
-    };
+            "createdat",
+            "title",
+            "duedate",
+            "priority",
+            "status"
+        };
 
         if (string.IsNullOrWhiteSpace(sortBy)
             || !allowedSortFields.Contains(sortBy))
@@ -402,6 +402,7 @@ public sealed class TaskService(
             Priority: task.Priority,
             DueDate: task.DueDate,
             ProjectId: task.ProjectId,
+            ProjectName: task.Project?.Name.Value,
             CreatedAt: task.CreatedAt,
             UpdatedAt: task.UpdatedAt
         );

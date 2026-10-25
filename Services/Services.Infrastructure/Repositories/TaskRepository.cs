@@ -17,6 +17,9 @@ public sealed class TaskRepository(
         await dbContext.Tasks.AddAsync(task, cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.Entry(task)
+            .Reference(item => item.Project)
+            .LoadAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<TaskItem>> GetAllByUserIdAsync(
@@ -25,6 +28,7 @@ public sealed class TaskRepository(
     {
         return await dbContext.Tasks
             .AsNoTracking()
+            .Include(task => task.Project)
             .Where(task => task.UserId == userId)
             .OrderBy(task => task.DueDate == null)
             .ThenBy(task => task.DueDate)
@@ -38,6 +42,7 @@ public sealed class TaskRepository(
         CancellationToken cancellationToken = default)
     {
         return await dbContext.Tasks
+            .Include(task => task.Project)
             .FirstOrDefaultAsync(
                 task => task.Id == taskId
                     && task.UserId == userId,
@@ -81,6 +86,7 @@ public sealed class TaskRepository(
     {
         IQueryable<TaskItem> tasks = dbContext.Tasks
             .AsNoTracking()
+            .Include(task => task.Project)
             .Where(task => task.UserId == userId);
 
         // Filtro por estado.
@@ -158,6 +164,7 @@ public sealed class TaskRepository(
     {
         IQueryable<TaskItem> tasks = dbContext.Tasks
             .AsNoTracking()
+            .Include(task => task.Project)
             .Where(task =>
                 task.UserId == userId &&
                 task.ProjectId == projectId);

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "cn";
-import { ThemeProvider } from "@/providers/theme-provider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -35,16 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       )}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
-      </body>
+      <body className="min-h-full flex flex-col dark">{children}</body>
     </html>
   );
 }

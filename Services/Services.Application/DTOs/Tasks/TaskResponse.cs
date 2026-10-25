@@ -10,5 +10,6 @@ public sealed record TaskResponse(
     TaskPriority Priority,
     DateTimeOffset? DueDate,
     Guid? ProjectId,
+    string? ProjectName,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);

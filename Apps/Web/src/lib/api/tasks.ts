@@ -28,6 +28,14 @@ export enum TaskPriority {
   Urgent = 4,
 }
 
+export enum TaskAllowedSortFields {
+  CreatedAt = 1,
+  Title = 2,
+  DueDate = 3,
+  Priority = 4,
+  Status = 5,
+}
+
 export interface TaskResponse {
   id: string;
   title: string;
@@ -36,6 +44,7 @@ export interface TaskResponse {
   priority: TaskPriority;
   dueDate: string | null;
   projectId: string | null;
+  projectName: string | null;
   createdAt: string;
   updatedAt: string;
 }
