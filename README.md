@@ -1,185 +1,140 @@
 # TaskFlow
 
-API REST para la gestión de tareas y proyectos, desarrollada con ASP.NET Core y PostgreSQL. El proyecto forma parte de mi portafolio de desarrollo de software y tiene como objetivo poner en práctica principios de arquitectura por capas, diseño orientado al dominio, autenticación y persistencia de datos.
+TaskFlow es una aplicación para organizar tareas y proyectos. El repositorio contiene una API REST en ASP.NET Core y una interfaz web en Next.js. La API usa PostgreSQL, Entity Framework Core e inicio de sesión con JWT.
 
-## Características
+## Funcionalidades
 
-### Autenticación y seguridad
+- Registro, inicio y cierre de sesión.
+- Gestión de tareas: creación, consulta, edición, cambio de estado y eliminación.
+- Filtros por estado y prioridad, búsqueda por título, orden y paginación.
+- Gestión de proyectos y consulta de sus tareas y resumen.
+- Aislamiento de tareas y proyectos por usuario autenticado.
+- Interfaz web con dashboard, tareas y proyectos.
+- Documentación interactiva de la API con Scalar en desarrollo.
 
-- Autenticación mediante JSON Web Tokens (JWT).
-- Endpoints protegidos mediante autorización.
-- Separación de los recursos por usuario autenticado.
-- Validación de la propiedad de tareas y proyectos.
-
-### Gestión de tareas
-
-- Crear, consultar, actualizar y eliminar tareas.
-- Asignar prioridades y estados.
-- Definir fechas de vencimiento.
-- Asociar tareas con proyectos.
-- Buscar tareas por título.
-- Filtrar por estado y prioridad.
-- Ordenar resultados por diferentes campos.
-- Paginar los resultados.
-
-### Gestión de proyectos
-
-- Crear, consultar, actualizar y eliminar proyectos.
-- Asociar tareas a proyectos.
-- Consultar las tareas de un proyecto.
-- Validar que los proyectos pertenezcan al usuario autenticado.
-
-### Documentación de la API
-
-- Exploración y prueba de endpoints mediante Scalar.
-
-## Tecnologías
-
-- **C#**
-- **ASP.NET Core 10**
-- **Entity Framework Core 10**
-- **PostgreSQL**
-- **JWT (JSON Web Tokens)**
-- **Scalar**
-- **LINQ**
-- **Arquitectura por capas**
-
-## Arquitectura
-
-La solución está organizada en los siguientes proyectos:
+## Estructura
 
 ```text
-Services/
-├── Services.Api/
-│   └── Controladores, endpoints y configuración de la API
-├── Services.Application/
-│   └── Casos de uso, servicios, DTOs e interfaces
-├── Services.Domain/
-│   └── Entidades, enumeraciones y objetos de valor
-└── Services.Infrastructure/
-    └── Persistencia, Entity Framework Core y repositorios
+TaskFlow/
+├── Services/
+│   ├── Services.Api/             # Controladores HTTP, autenticación y OpenAPI
+│   ├── Services.Application/     # Casos de uso, DTOs e interfaces
+│   ├── Services.Domain/          # Entidades, estados y reglas del dominio
+│   ├── Services.Infrastructure/  # PostgreSQL, EF Core, Identity y repositorios
+│   └── Services.slnx
+├── Apps/
+│   └── Web/                      # Aplicación Next.js
+└── README.md
 ```
 
-### Responsabilidades por capa
+## Requisitos
 
-- **Services.Api:** expone los endpoints HTTP, gestiona las solicitudes y aplica autenticación y autorización.
-- **Services.Application:** implementa los casos de uso y coordina las operaciones de la aplicación.
-- **Services.Domain:** contiene las reglas de negocio, entidades y objetos de valor.
-- **Services.Infrastructure:** implementa el acceso a datos y la integración con PostgreSQL mediante Entity Framework Core.
-
-Esta separación busca mantener las reglas de negocio independientes de los detalles de infraestructura y facilitar el mantenimiento y las pruebas.
-
-## Requisitos previos
-
-Para ejecutar el proyecto necesitas:
-
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- .NET 10 SDK
 - PostgreSQL
-- Una base de datos para TaskFlow
-- Un editor compatible con .NET, como Visual Studio o Visual Studio Code
+- Node.js compatible con Next.js 16 y pnpm
 
-## Configuración
+## Configurar y ejecutar la API
 
-1. Clona el repositorio:
+Desde la raíz del repositorio, configura los valores de `Services.Api` mediante User Secrets o variables de entorno. La aplicación requiere:
 
-   ```bash
-   git clone https://github.com/jejejesus/TaskFlow
-   cd TaskFlow
-   ```
+- `ConnectionStrings:DefaultConnection`: cadena de conexión de PostgreSQL.
+- `Jwt:Issuer` y `Jwt:Audience`: emisor y audiencia del token.
+- `Jwt:SecretKey`: clave en Base64 que represente al menos 32 bytes.
+- `Jwt:ExpirationMinutes`: duración del token en minutos.
 
-2. Configura la cadena de conexión de PostgreSQL y los parámetros de autenticación JWT según la configuración de `Services.Api`.
-
-   No guardes claves JWT ni contraseñas reales directamente en el repositorio. Utiliza User Secrets o variables de entorno para los valores sensibles.
-
-3. Verifica que las herramientas de Entity Framework Core estén instaladas:
-
-   ```bash
-   dotnet tool install --global dotnet-ef
-   ```
-
-   Si ya están instaladas, comprueba su versión con:
-
-   ```bash
-   dotnet ef --version
-   ```
-
-## Base de datos y migraciones
-
-Desde el directorio que contiene la solución, revisa la configuración de Entity Framework Core y ejecuta las migraciones pendientes.
-
-Ejemplo, suponiendo que `Services.Infrastructure` contiene el `DbContext` y las migraciones, y que `Services.Api` es el proyecto de inicio:
+Ejemplo para desarrollo con User Secrets (ejecutar desde `Services/Services.Api`):
 
 ```bash
-dotnet ef database update \
-  --project Services.Infrastructure \
-  --startup-project Services.Api
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=TaskFlow;Username=postgres;Password=TU_PASSWORD"
+dotnet user-secrets set "Jwt:Issuer" "TaskFlow.Api"
+dotnet user-secrets set "Jwt:Audience" "TaskFlow.Client"
+dotnet user-secrets set "Jwt:SecretKey" "<CLAVE_BASE64_DE_AL_MENOS_32_BYTES>"
+dotnet user-secrets set "Jwt:ExpirationMinutes" "10080"
 ```
 
-Si todavía no existen migraciones, puedes crear la primera con:
+No guardes contraseñas ni claves reales en archivos versionados. El archivo `appsettings.Example.json` muestra la forma general de la configuración.
+
+Aplica las migraciones y ejecuta la API desde `Services/`:
 
 ```bash
-dotnet ef migrations add InitialCreate \
-  --project Services.Infrastructure \
-  --startup-project Services.Api
-```
-
-> Si las migraciones ya están creadas, no necesitas generar otra migración inicial. Ajusta los comandos si tu `DbContext` o las migraciones están ubicados en otro proyecto.
-
-## Ejecutar la API
-
-Desde el directorio de la solución:
-
-```bash
-dotnet restore
-dotnet build
+dotnet restore Services.slnx
+dotnet ef database update --project Services.Infrastructure --startup-project Services.Api
 dotnet run --project Services.Api
 ```
 
-Utiliza la URL que muestre la consola al iniciar la aplicación. Si Scalar está habilitado en ese entorno, accede a la ruta configurada para consultar y probar los endpoints.
+En el entorno Development, Scalar está disponible en `/scalar/v1` y el documento OpenAPI en `/openapi/v1.json`, bajo la URL local que indique `dotnet run`.
 
-## Endpoints principales
+## Configurar y ejecutar la aplicación web
 
-Los endpoints requieren autenticación, salvo que se indique lo contrario.
+Desde `Apps/Web`, instala dependencias y arranca Next.js:
 
-| Método | Endpoint                   | Descripción                                    |
-| ------ | -------------------------- | ---------------------------------------------- |
-| POST   | `/api/tasks`               | Crear una tarea                                |
-| GET    | `/api/tasks`               | Consultar tareas con filtros y paginación      |
-| GET    | `/api/tasks/me`            | Consultar la identidad del usuario autenticado |
-| GET    | `/api/tasks/{id}`          | Obtener una tarea                              |
-| PUT    | `/api/tasks/{id}`          | Actualizar una tarea                           |
-| DELETE | `/api/tasks/{id}`          | Eliminar una tarea                             |
-| POST   | `/api/projects`            | Crear un proyecto                              |
-| GET    | `/api/projects`            | Consultar proyectos                            |
-| GET    | `/api/projects/{id}`       | Obtener un proyecto                            |
-| PUT    | `/api/projects/{id}`       | Actualizar un proyecto                         |
-| DELETE | `/api/projects/{id}`       | Eliminar un proyecto                           |
-| GET    | `/api/projects/{id}/tasks` | Consultar las tareas de un proyecto            |
+```bash
+pnpm install
+pnpm dev
+```
 
-La disponibilidad exacta de cada ruta depende de la configuración actual de los controladores.
+La web se sirve normalmente en `http://localhost:3000`. Sus llamadas pasan por `src/app/api/[...path]/route.ts`, que reenvía las solicitudes al backend. Configura `API_BASE_URL` en `Apps/Web/.env.local` para apuntar a la URL base de la API, incluyendo `/api`; por ejemplo:
 
-### Consultas de tareas
+```dotenv
+API_BASE_URL=https://localhost:7120/api
+```
 
-El listado de tareas admite paginación y opciones de consulta, incluyendo filtros por estado y prioridad, búsqueda por título y ordenamiento.
+El proxy usa esa URL por defecto si no se define la variable. En desarrollo deshabilita la validación TLS del proceso Node para permitir certificados locales. Usa un certificado confiable o configura TLS correctamente en otros entornos.
 
-Consulta los parámetros definidos en `TaskQueryRequest` para conocer los nombres y valores aceptados por la implementación actual.
+## API
 
-## Estado del proyecto
+Todas las rutas de tareas y proyectos requieren `Authorization: Bearer <token>`. Obtén el token mediante `POST /api/auth/register` o `POST /api/auth/login`; el campo de respuesta es `accessToken`.
 
-TaskFlow se encuentra en desarrollo incremental. Las funcionalidades implementadas se validan mediante solicitudes a la API.
+| Método | Ruta | Descripción |
+| --- | --- | --- |
+| `POST` | `/api/auth/register` | Registrar usuario |
+| `POST` | `/api/auth/login` | Iniciar sesión |
+| `POST` | `/api/auth/logout` | Cerrar sesión autenticada |
+| `POST` | `/api/tasks` | Crear tarea |
+| `GET` | `/api/tasks` | Listar tareas con filtros y paginación |
+| `GET` | `/api/tasks/{id}` | Obtener tarea |
+| `PUT` | `/api/tasks/{id}` | Actualizar tarea |
+| `PATCH` | `/api/tasks/{id}/status` | Cambiar estado |
+| `DELETE` | `/api/tasks/{id}` | Eliminar tarea |
+| `POST` | `/api/projects` | Crear proyecto |
+| `GET` | `/api/projects` | Listar proyectos |
+| `GET` | `/api/projects/{id}` | Obtener proyecto |
+| `PUT` | `/api/projects/{id}` | Actualizar proyecto |
+| `DELETE` | `/api/projects/{id}` | Eliminar proyecto |
+| `GET` | `/api/projects/{id}/tasks` | Listar tareas de un proyecto |
+| `GET` | `/api/projects/{id}/summary` | Consultar resumen del proyecto |
 
-### Próximas mejoras
+`GET /api/tasks` y `GET /api/projects/{id}/tasks` aceptan `Page`, `PageSize` (máximo 100), `Status`, `Priority`, `Search`, `SortBy` y `SortDirection`. Los valores de ordenamiento admitidos son `createdAt`, `title`, `dueDate`, `priority` y `status`; la dirección es `asc` o `desc`. Los valores de estado y prioridad corresponden a sus enumeraciones en el backend.
 
-- Implementar un resumen del progreso de cada proyecto.
-- Incorporar pruebas automatizadas.
-- Mejorar la gestión de errores y las respuestas de validación.
-- Desarrollar una interfaz frontend para consumir la API.
-- Preparar documentación y ejemplos de uso más completos.
+Ejemplo de inicio de sesión:
 
-## Objetivo
+```bash
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"usuario@ejemplo.com","password":"Password123!"}'
+```
 
-Este proyecto busca demostrar conocimientos prácticos en desarrollo backend con .NET, diseño de APIs REST, persistencia relacional, autenticación JWT, arquitectura por capas y modelado del dominio.
+Usa la dirección y el esquema HTTP/HTTPS mostrados por `dotnet run`; el puerto del ejemplo puede variar según el perfil local.
 
-## Autor
+## Desarrollo
 
-Desarrollado por Ing. Jesús Manuel Bañuelos Ibarra.
+Los comandos de frontend disponibles en `Apps/Web/package.json` incluyen:
+
+```bash
+pnpm lint
+pnpm fmt:check
+pnpm build
+```
+
+La solución backend se puede compilar con:
+
+```bash
+dotnet build Services.slnx
+```
+
+El proyecto continúa en desarrollo; consulta los controladores y DTOs para los contratos detallados de cada endpoint.
+
+## Licencia y autoría
+
+Desarrollado por Ing. Jesús Manuel Bañuelos Ibarra. No se especifica una licencia de distribución en este repositorio.
+
