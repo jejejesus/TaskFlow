@@ -5,9 +5,13 @@ import { TaskResponse } from "@/lib/api/tasks";
 import { Skeleton } from "../ui/skeleton";
 import { statusLabels, statusStyles } from "@/lib/util-constants/tasks-constants";
 
-function formatDate(value: string | null) {
+function formatDate(value: Date | null) {
   if (!value) return "Sin fecha límite";
-  return new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "long", year: "numeric" }).format(new Date(value));
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(value));
 }
 
 type SummaryProps = {

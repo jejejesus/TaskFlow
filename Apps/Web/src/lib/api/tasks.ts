@@ -42,7 +42,7 @@ export interface TaskResponse {
   description: string | null;
   status: TaskCurrentStatus;
   priority: TaskPriority;
-  dueDate: string | null;
+  dueDate: Date | null;
   projectId: string | null;
   projectName: string | null;
   projectColor: string | null;
@@ -54,7 +54,7 @@ export interface CreateTaskRequest {
   title: string;
   description: string | null;
   priority: TaskPriority;
-  dueDate: string | null; // ISO string
+  dueDate: Date | null;
   projectId: string | null;
 }
 
@@ -62,7 +62,7 @@ export interface UpdateTaskRequest {
   title: string;
   description: string | null;
   priority: TaskPriority;
-  dueDate: string | null;
+  dueDate: Date | null;
   projectId: string | null;
 }
 

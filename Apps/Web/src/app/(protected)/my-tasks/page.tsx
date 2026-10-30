@@ -2,23 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { ApiError } from "@/lib/api/helper";
-import {
-  tasksApi,
-  type TaskResponse,
-} from "@/lib/api/tasks";
+import { tasksApi, type TaskResponse } from "@/lib/api/tasks";
 import SearchFilter from "@/components/tasks-page/search-filter";
-import { statusLabels, priorityLabels, taskSortFieldLabels, } from "@/lib/util-constants/tasks-constants";
+import {
+  statusLabels,
+  priorityLabels,
+  taskSortFieldLabels,
+} from "@/lib/util-constants/tasks-constants";
 import TasksTable from "@/components/tasks-page/table-section";
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import TaskForm from "@/components/tasks-page/task-form";
+import TaskFormDialog from "@/components/tasks-page/task-form";
 
 export default function Page() {
   const [tasks, setTasks] = useState<TaskResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [taskFormDialogState, setTaskFormDialogState] = useState(false);
+  const [editingTask, setEditingTask] = useState<TaskResponse | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,6 +45,24 @@ export default function Page() {
     };
   }, []);
 
+  function onCreateTask() {
+    setEditingTask(null);
+    setTaskFormDialogState(true);
+  }
+
+  function onEditTask(taskId: string) {
+    const task = tasks.find((t) => t.id === taskId) ?? null;
+    setEditingTask(task);
+    setTaskFormDialogState(true);
+  }
+
+  function handleTaskSaved(saved: TaskResponse) {
+    setTasks((prev) => {
+      const exists = prev.some((t) => t.id === saved.id);
+      return exists ? prev.map((t) => (t.id === saved.id ? saved : t)) : [saved, ...prev];
+    });
+  }
+
   return (
     <main className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
       <header className="flex justify-between">
@@ -52,20 +73,27 @@ export default function Page() {
           </p>
         </div>
 
-        <Dialog>
-          <DialogTrigger render={
-            <Button><HugeiconsIcon
-              icon={Add01Icon}
-              strokeWidth={2}
-            />Crear tarea</Button>} />
-          <TaskForm />
-        </Dialog>
+        <Button onClick={onCreateTask}>
+          <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
+          Crear tarea
+        </Button>
       </header>
 
       <SearchFilter
         statusLabels={statusLabels}
         priorityLabels={priorityLabels}
         orderByLabels={taskSortFieldLabels}
+      />
+
+      <TaskFormDialog
+        key={editingTask?.id}
+        open={taskFormDialogState}
+        onOpenChange={(open) => {
+          setTaskFormDialogState(open);
+          if (!open) setEditingTask(null);
+        }}
+        task={editingTask}
+        onSaved={handleTaskSaved}
       />
 
       {error && (
@@ -77,8 +105,7 @@ export default function Page() {
         </p>
       )}
 
-      <TasksTable tasks={tasks} loading={loading} />
+      <TasksTable tasks={tasks} loading={loading} onEditTask={onEditTask} />
     </main>
   );
 }
-

@@ -114,7 +114,7 @@ function PremadeSelect({
             }
           </SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent alignItemWithTrigger>
           <SelectGroup>
             {selectLabels.map((item) => (
               <SelectItem key={item.value} value={item.value}>
