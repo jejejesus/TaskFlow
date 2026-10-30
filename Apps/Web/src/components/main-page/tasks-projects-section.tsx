@@ -1,25 +1,13 @@
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProjectResponse } from "@/lib/api/projects";
-import { TaskCurrentStatus, TaskResponse } from "@/lib/api/tasks";
+import { TaskResponse } from "@/lib/api/tasks";
 import { Skeleton } from "../ui/skeleton";
-
-const statusLabels: Record<number, string> = {
-  [TaskCurrentStatus.Todo]: "Pendiente",
-  [TaskCurrentStatus.InProgress]: "En progreso",
-  [TaskCurrentStatus.Done]: "Completada",
-};
-
-const statusStyles: Record<number, string> = {
-  [TaskCurrentStatus.Todo]: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  [TaskCurrentStatus.InProgress]: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-  [TaskCurrentStatus.Done]: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  //[TaskCurrentStatus.Cancelled]: "bg-muted text-muted-foreground",
-};
+import { statusLabels, statusStyles } from "@/lib/util-constants/tasks-constants";
 
 function formatDate(value: string | null) {
   if (!value) return "Sin fecha límite";
-  return new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(new Date(value));
+  return new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "long", year: "numeric" }).format(new Date(value));
 }
 
 type SummaryProps = {
@@ -76,7 +64,7 @@ export default function TaskProjects({ tasks, projects, loading = false }: Summa
                   <div className="min-w-0">
                     <p className="truncate font-medium">{task.title}</p>
                     <p className="text-sm text-muted-foreground">
-                      Límite: {formatDate(task.dueDate)}
+                      Vencimiento: {formatDate(task.dueDate)}
                     </p>
                   </div>
                   <span

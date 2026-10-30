@@ -45,6 +45,7 @@ export interface TaskResponse {
   dueDate: string | null;
   projectId: string | null;
   projectName: string | null;
+  projectColor: string | null;
   createdAt: string;
   updatedAt: string;
 }

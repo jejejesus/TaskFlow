@@ -11,5 +11,6 @@ public sealed record TaskResponse(
     DateTimeOffset? DueDate,
     Guid? ProjectId,
     string? ProjectName,
+    string? ProjectColor,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);

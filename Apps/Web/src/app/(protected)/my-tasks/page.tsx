@@ -3,13 +3,17 @@
 import { useEffect, useState } from "react";
 import { ApiError } from "@/lib/api/helper";
 import {
-  TaskAllowedSortFields,
-  TaskCurrentStatus,
-  TaskPriority,
   tasksApi,
   type TaskResponse,
 } from "@/lib/api/tasks";
 import SearchFilter from "@/components/tasks-page/search-filter";
+import { statusLabels, priorityLabels, taskSortFieldLabels, } from "@/lib/util-constants/tasks-constants";
+import TasksTable from "@/components/tasks-page/table-section";
+import { Button } from "@/components/ui/button";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import TaskForm from "@/components/tasks-page/task-form";
 
 export default function Page() {
   const [tasks, setTasks] = useState<TaskResponse[]>([]);
@@ -40,17 +44,28 @@ export default function Page() {
 
   return (
     <main className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Mis tareas</h1>
-        <p className="text-muted-foreground">
-          Gestiona tus tareas y mantén el enfoque en lo importante.
-        </p>
+      <header className="flex justify-between">
+        <div className="w-full">
+          <h1 className="text-2xl font-semibold tracking-tight">Mis tareas</h1>
+          <p className="text-muted-foreground">
+            Gestiona tus tareas y mantén el enfoque en lo importante.
+          </p>
+        </div>
+
+        <Dialog>
+          <DialogTrigger render={
+            <Button><HugeiconsIcon
+              icon={Add01Icon}
+              strokeWidth={2}
+            />Crear tarea</Button>} />
+          <TaskForm />
+        </Dialog>
       </header>
 
       <SearchFilter
         statusLabels={statusLabels}
         priorityLabels={priorityLabels}
-        orderByLabels={sortFieldLabels}
+        orderByLabels={taskSortFieldLabels}
       />
 
       {error && (
@@ -61,27 +76,9 @@ export default function Page() {
           {error}
         </p>
       )}
+
+      <TasksTable tasks={tasks} loading={loading} />
     </main>
   );
 }
 
-const statusLabels: Record<number, string> = {
-  [TaskCurrentStatus.Todo]: "Pendiente",
-  [TaskCurrentStatus.InProgress]: "En progreso",
-  [TaskCurrentStatus.Done]: "Completada",
-};
-
-const priorityLabels: Record<number, string> = {
-  [TaskPriority.Low]: "Baja",
-  [TaskPriority.Medium]: "Media",
-  [TaskPriority.High]: "Alta",
-  [TaskPriority.Urgent]: "Urgente",
-};
-
-const sortFieldLabels: Record<number, string> = {
-  [TaskAllowedSortFields.CreatedAt]: "Fecha de creación",
-  [TaskAllowedSortFields.Title]: "Título",
-  [TaskAllowedSortFields.DueDate]: "Fecha límite",
-  [TaskAllowedSortFields.Priority]: "Prioridad",
-  [TaskAllowedSortFields.Status]: "Estatus",
-};

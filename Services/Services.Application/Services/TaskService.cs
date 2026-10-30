@@ -403,6 +403,7 @@ public sealed class TaskService(
             DueDate: task.DueDate,
             ProjectId: task.ProjectId,
             ProjectName: task.Project?.Name.Value,
+            ProjectColor: task.Project?.Color,
             CreatedAt: task.CreatedAt,
             UpdatedAt: task.UpdatedAt
         );
