@@ -157,7 +157,7 @@ export default function TaskFormDialog({ open, onOpenChange, task, onSaved }: Ta
               />
             </Field>
 
-            <Field>
+            <Field className="max-w-40">
               <FieldLabel htmlFor="priority">Prioridad</FieldLabel>
               <Select
                 items={priorities}

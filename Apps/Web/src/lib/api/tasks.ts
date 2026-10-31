@@ -29,11 +29,11 @@ export enum TaskPriority {
 }
 
 export enum TaskAllowedSortFields {
-  CreatedAt = 1,
-  Title = 2,
-  DueDate = 3,
-  Priority = 4,
-  Status = 5,
+  CreatedAt = "",
+  Title = "title",
+  DueDate = "duedate",
+  Priority = "priority",
+  Status = "status",
 }
 
 export interface TaskResponse {
@@ -76,8 +76,8 @@ export interface GetTasksQuery {
   Status?: TaskCurrentStatus;
   Priority?: TaskPriority;
   Search?: string;
-  SortBy?: string;
-  SortDirection?: string;
+  SortBy?: TaskAllowedSortFields;
+  SortDirection?: "asc" | "desc";
 }
 
 // ============================================
@@ -98,7 +98,7 @@ export const tasksApi = {
     if (query.Status !== undefined) params.set("Status", String(query.Status));
     if (query.Priority !== undefined) params.set("Priority", String(query.Priority));
     if (query.Search) params.set("Search", query.Search);
-    if (query.SortBy) params.set("SortBy", query.SortBy);
+    if (query.SortBy) params.set("SortBy", String(query.SortBy));
     if (query.SortDirection) params.set("SortDirection", query.SortDirection);
 
     const qs = params.toString();

@@ -108,10 +108,10 @@ public sealed class TaskRepository(
         // Búsqueda por título.
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
-            var search = query.Search.Trim();
+            var search = query.Search.Trim().ToLowerInvariant();
 
             tasks = tasks.Where(
-                task => task.Title.Value.Contains(search)
+                task => task.Title.Value.ToLower().Contains(search)
             );
         }
 

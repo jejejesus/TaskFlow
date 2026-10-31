@@ -6,25 +6,17 @@ namespace Services.Domain.Entities;
 public sealed class TaskItem
 {
     public Guid Id { get; private set; }
-
     public TaskTitle Title { get; private set; } = null!;
-
     public TaskDescription? Description { get; private set; }
-
     public TaskCurrentStatus Status { get; private set; }
-
     public TaskPriority Priority { get; private set; }
-
     public DateTimeOffset? DueDate { get; private set; }
-
     public Guid UserId { get; private set; }
-
     public Guid? ProjectId { get; private set; }
 
     public Project? Project { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
-
     public DateTimeOffset UpdatedAt { get; private set; }
 
     private TaskItem()

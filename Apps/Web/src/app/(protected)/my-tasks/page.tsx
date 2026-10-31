@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/helper";
-import { tasksApi, type TaskResponse } from "@/lib/api/tasks";
-import SearchFilter from "@/components/tasks-page/search-filter";
+import { ApiError, PagedResponse } from "@/lib/api/helper";
+import { GetTasksQuery, TaskAllowedSortFields, tasksApi, type TaskResponse } from "@/lib/api/tasks";
+import TaskQuery from "@/components/tasks-page/task-query";
 import {
   statusLabels,
   priorityLabels,
@@ -14,22 +14,40 @@ import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import TaskFormDialog from "@/components/tasks-page/task-form";
+import { TaskPagination } from "@/components/tasks-page/task-pagination";
 
 export default function Page() {
-  const [tasks, setTasks] = useState<TaskResponse[]>([]);
+  const [tasks, setTasks] = useState<PagedResponse<TaskResponse>>({
+    items: [],
+    page: 1,
+    pageSize: 10,
+    totalCount: 1,
+    totalPages: 1,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [queryParams, setQueryParams] = useState<GetTasksQuery>({
+    Page: 1,
+    PageSize: 10,
+    Status: undefined,
+    Priority: undefined,
+    SortBy: TaskAllowedSortFields.CreatedAt,
+    SortDirection: "asc",
+  });
 
   const [taskFormDialogState, setTaskFormDialogState] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResponse | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setError(null);
 
+    console.log(queryParams);
     tasksApi
-      .list({ Page: 1, PageSize: 20 })
+      .list(queryParams)
       .then((response) => {
-        if (!cancelled) setTasks(response.items);
+        if (!cancelled) setTasks(response);
       })
       .catch((cause: unknown) => {
         if (!cancelled) {
@@ -43,24 +61,64 @@ export default function Page() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [queryParams]);
 
-  function onCreateTask() {
+  function handleCreateTask() {
     setEditingTask(null);
     setTaskFormDialogState(true);
   }
 
-  function onEditTask(taskId: string) {
-    const task = tasks.find((t) => t.id === taskId) ?? null;
+  function handleEditTask(taskId: string) {
+    const task = tasks.items.find((t) => t.id === taskId) ?? null;
     setEditingTask(task);
     setTaskFormDialogState(true);
   }
 
   function handleTaskSaved(saved: TaskResponse) {
     setTasks((prev) => {
-      const exists = prev.some((t) => t.id === saved.id);
-      return exists ? prev.map((t) => (t.id === saved.id ? saved : t)) : [saved, ...prev];
+      const exists = prev.items.some((t) => t.id === saved.id);
+
+      const newItems = exists
+        ? prev.items.map((t) => (t.id === saved.id ? saved : t))
+        : [saved, ...prev.items];
+
+      return {
+        ...prev,
+        items: newItems,
+      };
     });
+  }
+
+  function handleQueryChange(updates: Partial<GetTasksQuery>) {
+    setQueryParams((prev) => ({ ...prev, ...updates }));
+    console.log(queryParams);
+  }
+
+  function handlePageChange(newPage: number) {
+    if (newPage < 1 || newPage > tasks.totalPages || newPage === queryParams.Page) return;
+    setQueryParams((prev) => ({ ...prev, Page: newPage }));
+  }
+
+  if (error) {
+    return (
+      <main className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
+        <header className="flex justify-between">
+          <div className="w-full">
+            <h1 className="text-2xl font-semibold tracking-tight">Mis tareas</h1>
+            <p className="text-muted-foreground">
+              Gestiona tus tareas y mantén el enfoque en lo importante.
+            </p>
+          </div>
+        </header>
+
+        <p
+          role="alert"
+          className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+        >
+          {error}
+        </p>
+      </main>
+    );
   }
 
   return (
@@ -73,16 +131,18 @@ export default function Page() {
           </p>
         </div>
 
-        <Button onClick={onCreateTask}>
+        <Button onClick={handleCreateTask}>
           <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
           Crear tarea
         </Button>
       </header>
 
-      <SearchFilter
+      <TaskQuery
         statusLabels={statusLabels}
         priorityLabels={priorityLabels}
         orderByLabels={taskSortFieldLabels}
+        queryParams={queryParams}
+        onQueryChange={handleQueryChange}
       />
 
       <TaskFormDialog
@@ -95,17 +155,8 @@ export default function Page() {
         task={editingTask}
         onSaved={handleTaskSaved}
       />
-
-      {error && (
-        <p
-          role="alert"
-          className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
-        >
-          {error}
-        </p>
-      )}
-
-      <TasksTable tasks={tasks} loading={loading} onEditTask={onEditTask} />
+      <TasksTable tasks={tasks.items} loading={loading} onEditTask={handleEditTask} />
+      <TaskPagination tasks={tasks} onPageChange={handlePageChange} />
     </main>
   );
 }

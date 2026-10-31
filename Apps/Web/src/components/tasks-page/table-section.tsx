@@ -46,9 +46,15 @@ type TasksTableProps = {
   tasks: TaskResponse[];
   loading?: boolean;
   onEditTask: (taskId: string) => void;
+  onDeleteTask?: (taskId: string) => void;
 };
 
-export default function TasksTable({ tasks, loading = false, onEditTask }: TasksTableProps) {
+export default function TasksTable({
+  tasks,
+  loading = false,
+  onEditTask,
+  onDeleteTask,
+}: TasksTableProps) {
   if (!loading && tasks.length <= 0)
     return (
       <Empty>
@@ -134,7 +140,7 @@ export default function TasksTable({ tasks, loading = false, onEditTask }: Tasks
                     <DropdownMenuItem onClick={() => onEditTask(task.id)}>Editar</DropdownMenuItem>
                     <DropdownMenuItem>Duplicar</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive">Borrar</DropdownMenuItem>
+                    <DropdownMenuItem variant="destructive">Eliminar</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

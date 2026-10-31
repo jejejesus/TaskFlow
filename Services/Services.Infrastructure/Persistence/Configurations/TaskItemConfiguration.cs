@@ -17,12 +17,13 @@ public sealed class TaskItemConfiguration
         builder.Property(task => task.Id)
             .ValueGeneratedNever();
 
-        builder.Property(task => task.Title)
-            .HasConversion(
-                title => title.Value,
-                value => TaskTitle.Create(value))
-            .HasMaxLength(TaskTitle.MaxLength)
-            .IsRequired();
+        builder.ComplexProperty(task => task.Title, titleBuilder =>
+        {
+            titleBuilder.Property(t => t.Value)
+                .HasColumnName("Title")
+                .HasMaxLength(TaskTitle.MaxLength)
+                .IsRequired();
+        });
 
         builder.Property(task => task.Description)
             .HasConversion(
