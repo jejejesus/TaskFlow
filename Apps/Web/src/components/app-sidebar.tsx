@@ -18,6 +18,7 @@ import {
   CheckListIcon,
   ChartGanttIcon,
   TaskDaily01Icon,
+  KanbanIcon,
 } from "@hugeicons/core-free-icons";
 
 // This is sample data.
@@ -32,6 +33,7 @@ const data = {
       title: "Inicio",
       url: "/",
       icon: DashboardSpeed01Icon,
+      icon: DashboardSpeed01Icon,
       isActive: true,
       items: [],
     },
@@ -43,6 +45,7 @@ const data = {
     {
       title: "Proyectos",
       url: "/projects",
+      icon: ChartGanttIcon,
       icon: ChartGanttIcon,
     },
   ],
