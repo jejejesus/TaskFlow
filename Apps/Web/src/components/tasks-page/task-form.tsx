@@ -46,14 +46,17 @@ function formatDate(value: Date | undefined) {
   }).format(new Date(value));
 }
 
-type TaskFormDialogProps = {
+export default function TaskFormDialog({
+  open,
+  onOpenChange,
+  task,
+  onSaved,
+}: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task?: TaskResponse | null;
   onSaved?: (task: TaskResponse) => void;
-};
-
-export default function TaskFormDialog({ open, onOpenChange, task, onSaved }: TaskFormDialogProps) {
+}) {
   const isEditing = Boolean(task);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

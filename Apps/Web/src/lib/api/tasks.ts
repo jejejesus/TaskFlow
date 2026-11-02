@@ -1,6 +1,7 @@
 import { apiFetch, PagedResponse } from "./helper";
 
 export type { PagedResponse } from "./helper";
+export { ApiError } from "./helper";
 
 // ============================================
 // Tipos / DTOs

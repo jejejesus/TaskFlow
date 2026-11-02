@@ -14,9 +14,9 @@ import {
 } from "@/components/ui/sidebar";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Analytics01Icon,
+  DashboardSpeed01Icon,
   CheckListIcon,
-  FolderKanbanIcon,
+  ChartGanttIcon,
   TaskDaily01Icon,
 } from "@hugeicons/core-free-icons";
 
@@ -31,51 +31,19 @@ const data = {
     {
       title: "Inicio",
       url: "/",
-      icon: <HugeiconsIcon icon={Analytics01Icon} strokeWidth={2} />,
+      icon: DashboardSpeed01Icon,
       isActive: true,
       items: [],
     },
     {
       title: "Mis tareas",
       url: "/my-tasks",
-      icon: <HugeiconsIcon icon={CheckListIcon} strokeWidth={2} />,
-      items: [
-        /*{
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },*/
-      ],
+      icon: CheckListIcon,
     },
     {
       title: "Proyectos",
       url: "/projects",
-      icon: <HugeiconsIcon icon={FolderKanbanIcon} strokeWidth={2} />,
-      items: [
-        /*{
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },*/
-      ],
+      icon: ChartGanttIcon,
     },
   ],
 };

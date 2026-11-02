@@ -6,15 +6,16 @@ import {
   PaginationPrevious,
   PaginationNext,
   PaginationEllipsis,
-} from "@/components/ui/pagination"; // ajusta tu ruta
+} from "@/components/ui/pagination";
 import { PagedResponse, TaskResponse } from "@/lib/api/tasks";
 
-type TaskPaginationProps = {
+export default function TasksPagination({
+  tasks,
+  onPageChange,
+}: {
   tasks: PagedResponse<TaskResponse>;
   onPageChange: (page: number) => void;
-};
-
-export function TaskPagination({ tasks, onPageChange }: TaskPaginationProps) {
+}) {
   const { page: currentPage, totalPages } = tasks;
 
   const getVisiblePages = (): number[] => {

@@ -4,6 +4,7 @@ import { ProjectResponse } from "@/lib/api/projects";
 import { TaskResponse } from "@/lib/api/tasks";
 import { Skeleton } from "../ui/skeleton";
 import { statusLabels, statusStyles } from "@/lib/util-constants/tasks-constants";
+import { Badge } from "../ui/badge";
 
 function formatDate(value: Date | null) {
   if (!value) return "Sin fecha límite";
@@ -71,11 +72,9 @@ export default function TaskProjects({ tasks, projects, loading = false }: Summa
                       Vencimiento: {formatDate(task.dueDate)}
                     </p>
                   </div>
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[task.status] ?? "bg-muted text-muted-foreground"}`}
-                  >
+                  <Badge className={statusStyles[task.status] ?? "bg-muted text-muted-foreground"}>
                     {statusLabels[task.status] ?? "Desconocido"}
-                  </span>
+                  </Badge>
                 </li>
               ))}
             </ul>

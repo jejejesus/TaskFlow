@@ -1,20 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ApiError, PagedResponse } from "@/lib/api/helper";
-import { GetTasksQuery, TaskAllowedSortFields, tasksApi, type TaskResponse } from "@/lib/api/tasks";
-import TaskQuery from "@/components/tasks-page/task-query";
 import {
-  statusLabels,
-  priorityLabels,
-  taskSortFieldLabels,
-} from "@/lib/util-constants/tasks-constants";
-import TasksTable from "@/components/tasks-page/table-section";
+  GetTasksQuery,
+  TaskAllowedSortFields,
+  tasksApi,
+  ApiError,
+  TaskResponse,
+  PagedResponse,
+} from "@/lib/api/tasks";
+import TaskList from "@/components/tasks-page/list-section";
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, CheckListIcon, ListIcon, KanbanIcon } from "@hugeicons/core-free-icons";
 import TaskFormDialog from "@/components/tasks-page/task-form";
-import { TaskPagination } from "@/components/tasks-page/task-pagination";
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Page() {
   const [tasks, setTasks] = useState<PagedResponse<TaskResponse>>({
@@ -104,7 +105,10 @@ export default function Page() {
       <main className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
         <header className="flex justify-between">
           <div className="w-full">
-            <h1 className="text-2xl font-semibold tracking-tight">Mis tareas</h1>
+            <h1 className="flex gap-2 text-2xl font-semibold tracking-tight">
+              <HugeiconsIcon icon={CheckListIcon} strokeWidth={2} size={30} />
+              Mis tareas
+            </h1>
             <p className="text-muted-foreground">
               Gestiona tus tareas y mantén el enfoque en lo importante.
             </p>
@@ -125,7 +129,10 @@ export default function Page() {
     <main className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
       <header className="flex justify-between">
         <div className="w-full">
-          <h1 className="text-2xl font-semibold tracking-tight">Mis tareas</h1>
+          <h1 className="flex gap-2 text-2xl font-semibold tracking-tight">
+            <HugeiconsIcon icon={CheckListIcon} strokeWidth={2} size={30} />
+            Mis tareas
+          </h1>
           <p className="text-muted-foreground">
             Gestiona tus tareas y mantén el enfoque en lo importante.
           </p>
@@ -137,14 +144,6 @@ export default function Page() {
         </Button>
       </header>
 
-      <TaskQuery
-        statusLabels={statusLabels}
-        priorityLabels={priorityLabels}
-        orderByLabels={taskSortFieldLabels}
-        queryParams={queryParams}
-        onQueryChange={handleQueryChange}
-      />
-
       <TaskFormDialog
         key={editingTask?.id}
         open={taskFormDialogState}
@@ -155,8 +154,30 @@ export default function Page() {
         task={editingTask}
         onSaved={handleTaskSaved}
       />
-      <TasksTable tasks={tasks.items} loading={loading} onEditTask={handleEditTask} />
-      <TaskPagination tasks={tasks} onPageChange={handlePageChange} />
+
+      <Tabs defaultValue="overview">
+        <TabsList>
+          <TabsTrigger value="list">
+            <HugeiconsIcon icon={ListIcon} strokeWidth={2} />
+            Lista
+          </TabsTrigger>
+          <TabsTrigger value="kanban">
+            <HugeiconsIcon icon={KanbanIcon} strokeWidth={2} />
+            Kanban
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="list">
+          <TaskList
+            tasks={tasks}
+            loading={loading}
+            queryParams={queryParams}
+            onEditTask={handleEditTask}
+            onQueryChange={handleQueryChange}
+            onPageChange={handlePageChange}
+          />
+        </TabsContent>
+        <TabsContent value="kanban"></TabsContent>
+      </Tabs>
     </main>
   );
 }

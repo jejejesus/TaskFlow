@@ -3,6 +3,11 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Search01Icon, Sorting01Icon, Sorting02Icon } from "@hugeicons/core-free-icons";
+import {
+  statusLabels,
+  priorityLabels,
+  taskSortFieldLabels,
+} from "@/lib/util-constants/tasks-constants";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -16,21 +21,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { Field, FieldLabel } from "../ui/field";
 import { GetTasksQuery, TaskAllowedSortFields } from "@/lib/api/tasks";
 
-type TaskQueryProps = {
-  statusLabels: Record<number, string>;
-  priorityLabels: Record<number, string>;
-  orderByLabels: Record<number, string>;
-  queryParams: GetTasksQuery;
-  onQueryChange: (updates: Partial<GetTasksQuery>) => void;
-};
-
 export default function TaskQuery({
-  statusLabels,
-  priorityLabels,
-  orderByLabels,
   queryParams,
   onQueryChange,
-}: TaskQueryProps) {
+}: {
+  queryParams: GetTasksQuery;
+  onQueryChange: (updates: Partial<GetTasksQuery>) => void;
+}) {
   const [searchInput, setSearchInput] = useState(queryParams.Search ?? "");
 
   useEffect(() => {
@@ -82,7 +79,7 @@ export default function TaskQuery({
       <Field className="w-full max-w-48">
         <FieldLabel>Estatus</FieldLabel>
         <ButtonGroup>
-          <PremadeSelect
+          <FilterSelect
             labels={statusLabels}
             addAll="Todos"
             value={queryParams.Status?.toString()}
@@ -99,7 +96,7 @@ export default function TaskQuery({
       <Field className="w-full max-w-48">
         <FieldLabel>Prioridad</FieldLabel>
         <ButtonGroup>
-          <PremadeSelect
+          <FilterSelect
             labels={priorityLabels}
             addAll="Todas"
             value={queryParams.Priority?.toString()}
@@ -116,8 +113,8 @@ export default function TaskQuery({
       <Field className="w-full max-w-50">
         <FieldLabel>Ordenar por</FieldLabel>
         <ButtonGroup>
-          <PremadeSelect
-            labels={orderByLabels}
+          <FilterSelect
+            labels={taskSortFieldLabels}
             value={queryParams.SortBy ?? undefined}
             onValueChange={(v) =>
               onQueryChange({
@@ -152,7 +149,7 @@ export default function TaskQuery({
   );
 }
 
-function PremadeSelect({
+function FilterSelect({
   labels,
   addAll,
   value,

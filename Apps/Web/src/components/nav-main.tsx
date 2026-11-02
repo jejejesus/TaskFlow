@@ -3,7 +3,6 @@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuAction,
   SidebarMenuButton,
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { IconSvgObject } from "@hugeicons/core-free-icons/types";
 
 export function NavMain({
   items,
@@ -21,7 +21,7 @@ export function NavMain({
   items: {
     title: string;
     url: string;
-    icon?: React.ReactNode;
+    icon?: IconSvgObject;
     isActive?: boolean;
     items?: {
       title: string;
@@ -36,7 +36,7 @@ export function NavMain({
         {items.map((item) => (
           <Collapsible key={item.title} defaultOpen={item.isActive} render={<SidebarMenuItem />}>
             <SidebarMenuButton tooltip={item.title} render={<a href={item.url} />}>
-              {item.icon}
+              {item.icon && <HugeiconsIcon icon={item.icon} strokeWidth={2} />}
               <span>{item.title}</span>
             </SidebarMenuButton>
             {item.items?.length ? (

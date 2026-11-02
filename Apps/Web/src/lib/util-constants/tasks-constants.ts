@@ -27,7 +27,7 @@ export const priorityStyles: Record<number, string> = {
   [TaskPriority.Urgent]: "bg-red-500/10 text-red-700 dark:text-white-400",
 };
 
-export const taskSortFieldLabels: Record<number, string> = {
+export const taskSortFieldLabels: Record<string, string> = {
   [TaskAllowedSortFields.CreatedAt]: "Fecha de creación",
   [TaskAllowedSortFields.Title]: "Título",
   [TaskAllowedSortFields.DueDate]: "Fecha límite",
