@@ -32,6 +32,7 @@ import {
   EmptyTitle,
 } from "../ui/empty";
 import { Spinner } from "../ui/spinner";
+import { Badge } from "../ui/badge";
 
 function formatDate(value: Date | null) {
   if (!value) return "Sin fecha límite";
@@ -49,12 +50,7 @@ type TasksTableProps = {
   onDeleteTask?: (taskId: string) => void;
 };
 
-export default function TasksTable({
-  tasks,
-  loading = false,
-  onEditTask,
-  onDeleteTask,
-}: TasksTableProps) {
+export default function TasksTable({ tasks, loading = false, onEditTask }: TasksTableProps) {
   if (!loading && tasks.length <= 0)
     return (
       <Empty>
@@ -104,26 +100,27 @@ export default function TasksTable({
             <TableRow key={task.id}>
               <TableCell className="font-medium">{task.title}</TableCell>
               <TableCell>
-                <span
-                  className="rounded-full px-2.5 py-1 text-xs font-medium"
-                  style={{ backgroundColor: task.projectColor || "" }}
-                >
-                  {task.projectName}
-                </span>
+                {task.projectName && (
+                  <Badge className="py-3" variant="secondary">
+                    <span
+                      className="size-3 shrink-0 rounded-sm"
+                      style={{ backgroundColor: task.projectColor || "#6366F1" }}
+                    />
+                    {task.projectName}
+                  </Badge>
+                )}
               </TableCell>
               <TableCell>
-                <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[task.status] ?? "bg-muted text-muted-foreground"}`}
-                >
+                <Badge className={statusStyles[task.status] ?? "bg-muted text-muted-foreground"}>
                   {statusLabels[task.status] ?? "Desconocido"}
-                </span>
+                </Badge>
               </TableCell>
               <TableCell>
-                <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${priorityStyles[task.priority] ?? "bg-muted text-muted-foreground"}`}
+                <Badge
+                  className={priorityStyles[task.priority] ?? "bg-muted text-muted-foreground"}
                 >
                   {priorityLabels[task.priority] ?? "Desconocido"}
-                </span>
+                </Badge>
               </TableCell>
               <TableCell>{formatDate(task.dueDate)}</TableCell>
               <TableCell className="text-right">
