@@ -22,7 +22,7 @@ import {
   priorityLabels,
   priorityStyles,
 } from "@/lib/util-constants/tasks-constants";
-import { GetTasksQuery, PagedResponse, TaskResponse } from "@/lib/api/tasks";
+import { ApiError, GetTasksQuery, PagedResponse, TaskResponse, tasksApi } from "@/lib/api/tasks";
 import {
   Empty,
   EmptyContent,
@@ -35,6 +35,18 @@ import { Spinner } from "../ui/spinner";
 import { Badge } from "../ui/badge";
 import TasksPagination from "./list-pagination";
 import TaskQuery from "./list-query";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../ui/alert-dialog";
+import { useState } from "react";
+import { toast } from "../ui/toast";
 
 function formatDate(value: Date | null) {
   if (!value) return "Sin fecha límite";
@@ -50,6 +62,7 @@ export default function TasksList({
   loading = false,
   queryParams,
   onEditTask,
+  onDeleteTask,
   onQueryChange,
   onPageChange,
 }: {
@@ -57,10 +70,40 @@ export default function TasksList({
   loading?: boolean;
   queryParams: GetTasksQuery;
   onEditTask: (taskId: string) => void;
-  onDeleteTask?: (taskId: string) => void;
+  onDeleteTask: (taskId: string) => void;
   onQueryChange: (updates: Partial<GetTasksQuery>) => void;
   onPageChange: (page: number) => void;
 }) {
+  const [taskToDelete, setTaskToDelete] = useState<TaskResponse | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleConfirmDelete() {
+    if (!taskToDelete || deleting) return;
+
+    setDeleting(true);
+
+    try {
+      await tasksApi.remove(taskToDelete.id);
+
+      toast.add({
+        title: "Tarea eliminada",
+        type: "success",
+      });
+
+      onDeleteTask?.(taskToDelete.id);
+    } catch (cause: unknown) {
+      toast.add({
+        title: "Error al eliminar la tarea",
+        description: cause instanceof ApiError ? cause.message : "No se pudo eliminar la tarea.",
+        type: "error",
+        priority: "high",
+      });
+    } finally {
+      setDeleting(false);
+      setTaskToDelete(null);
+    }
+  }
+
   return (
     <section className="flex flex-1 flex-col gap-6">
       <TaskQuery queryParams={queryParams} onQueryChange={onQueryChange} />
@@ -93,6 +136,17 @@ export default function TasksList({
         </Empty>
       ) : (
         <>
+          <DeleteDialog
+            task={taskToDelete}
+            onOpenChange={(open) => {
+              if (!open) {
+                setTaskToDelete(null);
+              }
+            }}
+            onConfirm={handleConfirmDelete}
+            deleting={deleting}
+          />
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -148,9 +202,14 @@ export default function TasksList({
                         <DropdownMenuItem onClick={() => onEditTask(task.id)}>
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem>Duplicar</DropdownMenuItem>
+                        {/*<DropdownMenuItem>Duplicar</DropdownMenuItem>*/}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem variant="destructive">Eliminar</DropdownMenuItem>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={() => setTaskToDelete(task)}
+                        >
+                          Eliminar
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -163,5 +222,52 @@ export default function TasksList({
         </>
       )}
     </section>
+  );
+}
+
+function DeleteDialog({
+  task,
+  onOpenChange,
+  onConfirm,
+  deleting,
+}: {
+  task: TaskResponse | null;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  deleting: boolean;
+}) {
+  return (
+    <AlertDialog open={Boolean(task)} onOpenChange={onOpenChange}>
+      <AlertDialogContent size="sm">
+        <AlertDialogHeader>
+          <AlertDialogTitle>¿Eliminar tarea?</AlertDialogTitle>
+          <AlertDialogDescription>
+            La tarea {task?.title} se eliminará de manera permanente. No habrá vuelta atrás.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel variant="outline" disabled={deleting}>
+            Cancelar
+          </AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            onClick={(e) => {
+              e.preventDefault();
+              onConfirm();
+            }}
+            disabled={deleting}
+          >
+            {deleting ? (
+              <>
+                <Spinner />
+                Eliminando
+              </>
+            ) : (
+              <>Eliminar</>
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

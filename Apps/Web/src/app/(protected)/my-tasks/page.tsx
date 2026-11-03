@@ -12,10 +12,17 @@ import {
 import TaskList from "@/components/tasks-page/list-section";
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, CheckListIcon, ListIcon, KanbanIcon } from "@hugeicons/core-free-icons";
+import {
+  Add01Icon,
+  CheckListIcon,
+  ListIcon,
+  KanbanIcon,
+  AlertCircleIcon,
+} from "@hugeicons/core-free-icons";
 import TaskFormDialog from "@/components/tasks-page/task-form";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Page() {
   const [tasks, setTasks] = useState<PagedResponse<TaskResponse>>({
@@ -90,6 +97,14 @@ export default function Page() {
     });
   }
 
+  function handleTaskDeleted(taskId: string) {
+    setTasks((prev) => ({
+      ...prev,
+      items: prev.items.filter((t) => t.id !== taskId),
+      totalCount: (prev.totalCount ?? 0) - 1,
+    }));
+  }
+
   function handleQueryChange(updates: Partial<GetTasksQuery>) {
     setQueryParams((prev) => ({ ...prev, ...updates }));
     console.log(queryParams);
@@ -100,50 +115,8 @@ export default function Page() {
     setQueryParams((prev) => ({ ...prev, Page: newPage }));
   }
 
-  if (error) {
-    return (
-      <main className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
-        <header className="flex justify-between">
-          <div className="w-full">
-            <h1 className="flex gap-2 text-2xl font-semibold tracking-tight">
-              <HugeiconsIcon icon={CheckListIcon} strokeWidth={2} size={30} />
-              Mis tareas
-            </h1>
-            <p className="text-muted-foreground">
-              Gestiona tus tareas y mantén el enfoque en lo importante.
-            </p>
-          </div>
-        </header>
-
-        <p
-          role="alert"
-          className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
-        >
-          {error}
-        </p>
-      </main>
-    );
-  }
-
-  return (
-    <main className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
-      <header className="flex justify-between">
-        <div className="w-full">
-          <h1 className="flex gap-2 text-2xl font-semibold tracking-tight">
-            <HugeiconsIcon icon={CheckListIcon} strokeWidth={2} size={30} />
-            Mis tareas
-          </h1>
-          <p className="text-muted-foreground">
-            Gestiona tus tareas y mantén el enfoque en lo importante.
-          </p>
-        </div>
-
-        <Button onClick={handleCreateTask}>
-          <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
-          Crear tarea
-        </Button>
-      </header>
-
+  let content = (
+    <>
       <TaskFormDialog
         key={editingTask?.id}
         open={taskFormDialogState}
@@ -172,12 +145,48 @@ export default function Page() {
             loading={loading}
             queryParams={queryParams}
             onEditTask={handleEditTask}
+            onDeleteTask={handleTaskDeleted}
             onQueryChange={handleQueryChange}
             onPageChange={handlePageChange}
           />
         </TabsContent>
         <TabsContent value="kanban"></TabsContent>
       </Tabs>
+    </>
+  );
+
+  if (error) {
+    content = (
+      <Alert variant="destructive" className="max-w-md">
+        <HugeiconsIcon icon={AlertCircleIcon} strokeWidth={2} size={30} />
+        <AlertTitle>Error al cargar tareas</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  return (
+    <main className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
+      <header className="flex justify-between">
+        <div className="w-full">
+          <h1 className="flex gap-2 text-2xl font-semibold tracking-tight">
+            <HugeiconsIcon icon={CheckListIcon} strokeWidth={2} size={30} />
+            Mis tareas
+          </h1>
+          <p className="text-muted-foreground">
+            Gestiona tus tareas y mantén el enfoque en lo importante.
+          </p>
+        </div>
+
+        {!error && (
+          <Button onClick={handleCreateTask}>
+            <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
+            Crear tarea
+          </Button>
+        )}
+      </header>
+
+      {content}
     </main>
   );
 }

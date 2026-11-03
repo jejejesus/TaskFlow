@@ -36,6 +36,8 @@ import {
   SelectValue,
 } from "../ui/select";
 import { priorityLabels } from "@/lib/util-constants/tasks-constants";
+import { toast } from "../ui/toast";
+import { Spinner } from "../ui/spinner";
 
 function formatDate(value: Date | undefined) {
   if (!value) return "Sin fecha límite";
@@ -59,7 +61,6 @@ export default function TaskFormDialog({
 }) {
   const isEditing = Boolean(task);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -68,7 +69,6 @@ export default function TaskFormDialog({
 
   useEffect(() => {
     if (!open) return;
-    setError(null);
     setSubmitting(false);
     if (task) {
       setTitle(task.title);
@@ -92,7 +92,6 @@ export default function TaskFormDialog({
     if (submitting) return;
 
     setSubmitting(true);
-    setError(null);
 
     const payload: CreateTaskRequest | UpdateTaskRequest = {
       title: title,
@@ -107,12 +106,23 @@ export default function TaskFormDialog({
     try {
       const saved = task ? await tasksApi.update(task.id, payload) : await tasksApi.create(payload);
 
+      toast.add({
+        title: isEditing ? "Tarea editada" : "Tarea creada",
+        description: saved.title,
+        type: "success",
+      });
+
       onSaved?.(saved);
-      onOpenChange(false);
     } catch (cause: unknown) {
-      setError(cause instanceof ApiError ? cause.message : "No se pudo guardar la tarea.");
+      toast.add({
+        title: "Error al guardar la tarea",
+        description: cause instanceof ApiError ? cause.message : "No se pudo guardar la tarea.",
+        type: "error",
+        priority: "high",
+      });
     } finally {
       setSubmitting(false);
+      onOpenChange(false);
     }
   }
 
@@ -129,15 +139,6 @@ export default function TaskFormDialog({
             </DialogDescription>
           </DialogHeader>
 
-          {error && (
-            <p
-              role="alert"
-              className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
-            >
-              {error}
-            </p>
-          )}
-
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="title">Título</FieldLabel>
@@ -147,6 +148,7 @@ export default function TaskFormDialog({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
+                disabled={submitting}
               />
             </Field>
 
@@ -157,6 +159,7 @@ export default function TaskFormDialog({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="resize-none"
+                disabled={submitting}
               />
             </Field>
 
@@ -166,6 +169,7 @@ export default function TaskFormDialog({
                 items={priorities}
                 value={String(priority)}
                 onValueChange={(value) => setPriority(Number(value) as TaskPriority)}
+                disabled={submitting}
               >
                 <SelectTrigger id="priority">
                   <SelectValue />
@@ -194,6 +198,7 @@ export default function TaskFormDialog({
                       className="justify-start text-left font-normal data-[empty=true]:text-muted-foreground"
                     />
                   }
+                  disabled={submitting}
                 >
                   <HugeiconsIcon icon={Calendar03Icon} strokeWidth={2} />
                   {formatDate(dueDate)}
@@ -208,12 +213,21 @@ export default function TaskFormDialog({
           <DialogFooter>
             <DialogClose
               render={
-                <Button type="button" variant="outline">
+                <Button type="button" variant="outline" disabled={submitting}>
                   Cancelar
                 </Button>
               }
             />
-            <Button type="submit">Guardar</Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? (
+                <>
+                  <Spinner />
+                  Guardando
+                </>
+              ) : (
+                <>Guardar</>
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

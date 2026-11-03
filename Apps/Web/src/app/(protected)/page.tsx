@@ -6,6 +6,9 @@ import { projectsApi, type ProjectResponse } from "@/lib/api/projects";
 import { tasksApi, TaskCurrentStatus, type TaskResponse } from "@/lib/api/tasks";
 import { Summary } from "@/components/main-page/summary-section";
 import TaskProjects from "@/components/main-page/tasks-projects-section";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { AlertCircleIcon } from "@hugeicons/core-free-icons";
 
 export default function Page() {
   const [tasks, setTasks] = useState<TaskResponse[]>([]);
@@ -48,6 +51,24 @@ export default function Page() {
     };
   }, []);
 
+  let content = (
+    <>
+      <Summary counts={counts} projectCount={projects.length} loading={loading} />
+
+      <TaskProjects tasks={tasks} projects={projects} loading={loading} />
+    </>
+  );
+
+  if (error) {
+    content = (
+      <Alert variant="destructive" className="max-w-md">
+        <HugeiconsIcon icon={AlertCircleIcon} strokeWidth={2} size={30} />
+        <AlertTitle>Error al cargar datos</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <main className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
       <header>
@@ -55,18 +76,7 @@ export default function Page() {
         <p className="text-muted-foreground">Resumen de tus tareas y proyectos.</p>
       </header>
 
-      {error && (
-        <p
-          role="alert"
-          className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
-        >
-          {error}
-        </p>
-      )}
-
-      <Summary counts={counts} projectCount={projects.length} loading={loading} />
-
-      <TaskProjects tasks={tasks} projects={projects} loading={loading} />
+      {content}
     </main>
   );
 }
