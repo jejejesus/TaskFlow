@@ -22,7 +22,14 @@ import {
   priorityLabels,
   priorityStyles,
 } from "@/lib/util-constants/tasks-constants";
-import { ApiError, GetTasksQuery, PagedResponse, TaskResponse, tasksApi } from "@/lib/api/tasks";
+import {
+  ApiError,
+  CreateTaskRequest,
+  GetTasksQuery,
+  PagedResponse,
+  TaskResponse,
+  tasksApi,
+} from "@/lib/api/tasks";
 import {
   Empty,
   EmptyContent,
@@ -63,19 +70,49 @@ export default function TasksList({
   queryParams,
   onEditTask,
   onDeleteTask,
+  onSaved,
   onQueryChange,
   onPageChange,
 }: {
   tasks: PagedResponse<TaskResponse>;
   loading?: boolean;
   queryParams: GetTasksQuery;
-  onEditTask: (taskId: string) => void;
+  onEditTask: (task: TaskResponse) => void;
   onDeleteTask: (taskId: string) => void;
+  onSaved?: (task: TaskResponse) => void;
   onQueryChange: (updates: Partial<GetTasksQuery>) => void;
   onPageChange: (page: number) => void;
 }) {
   const [taskToDelete, setTaskToDelete] = useState<TaskResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  async function handleDuplicateTask(task: TaskResponse) {
+    const duplicated: CreateTaskRequest = {
+      title: task.title.trim() + " - Copia",
+      description: task.description,
+      priority: task.priority,
+      dueDate: task.dueDate,
+      projectId: task.projectId,
+    };
+
+    try {
+      let saved = await tasksApi.create(duplicated);
+
+      toast.add({
+        title: "Tarea dupliada",
+        type: "success",
+      });
+
+      onSaved?.(saved);
+    } catch (cause: unknown) {
+      toast.add({
+        title: "Error al duplicar la tarea",
+        description: cause instanceof ApiError ? cause.message : "No se pudo duplicar la tarea.",
+        type: "error",
+        priority: "high",
+      });
+    }
+  }
 
   async function handleConfirmDelete() {
     if (!taskToDelete || deleting) return;
@@ -194,15 +231,14 @@ export default function TasksList({
                         render={
                           <Button variant="ghost" size="icon" className="size-8">
                             <HugeiconsIcon icon={MoreVerticalIcon} strokeWidth={2} />
-                            <span className="sr-only">Open menu</span>
                           </Button>
                         }
                       />
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEditTask(task.id)}>
-                          Editar
+                        <DropdownMenuItem onClick={() => onEditTask(task)}>Editar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDuplicateTask(task)}>
+                          Duplicar
                         </DropdownMenuItem>
-                        {/*<DropdownMenuItem>Duplicar</DropdownMenuItem>*/}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           variant="destructive"

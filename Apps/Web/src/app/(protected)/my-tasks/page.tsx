@@ -76,8 +76,7 @@ export default function Page() {
     setTaskFormDialogState(true);
   }
 
-  function handleEditTask(taskId: string) {
-    const task = tasks.items.find((t) => t.id === taskId) ?? null;
+  function handleEditTask(task: TaskResponse) {
     setEditingTask(task);
     setTaskFormDialogState(true);
   }
@@ -146,6 +145,7 @@ export default function Page() {
             queryParams={queryParams}
             onEditTask={handleEditTask}
             onDeleteTask={handleTaskDeleted}
+            onSaved={handleTaskSaved}
             onQueryChange={handleQueryChange}
             onPageChange={handlePageChange}
           />
