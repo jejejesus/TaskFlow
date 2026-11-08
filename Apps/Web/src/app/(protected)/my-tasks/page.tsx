@@ -23,6 +23,7 @@ import TaskFormDialog from "@/components/tasks-page/task-form";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import TasksKanbanBoard from "@/components/tasks-page/kanban-section";
 
 export default function Page() {
   const [tasks, setTasks] = useState<PagedResponse<TaskResponse>>({
@@ -47,28 +48,18 @@ export default function Page() {
   const [editingTask, setEditingTask] = useState<TaskResponse | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
     setLoading(true);
     setError(null);
 
-    console.log(queryParams);
     tasksApi
       .list(queryParams)
-      .then((response) => {
-        if (!cancelled) setTasks(response);
-      })
+      .then((response) => setTasks(response))
       .catch((cause: unknown) => {
-        if (!cancelled) {
-          setError(cause instanceof ApiError ? cause.message : "No se pudieron cargar las tareas.");
-        }
+        setError(cause instanceof ApiError ? cause.message : "No se pudieron cargar las tareas.");
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       });
-
-    return () => {
-      cancelled = true;
-    };
   }, [queryParams]);
 
   function handleCreateTask() {
@@ -143,14 +134,16 @@ export default function Page() {
             tasks={tasks}
             loading={loading}
             queryParams={queryParams}
-            onEditTask={handleEditTask}
-            onDeleteTask={handleTaskDeleted}
+            onEdit={handleEditTask}
+            onDelete={handleTaskDeleted}
             onSaved={handleTaskSaved}
             onQueryChange={handleQueryChange}
             onPageChange={handlePageChange}
           />
         </TabsContent>
-        <TabsContent value="kanban"></TabsContent>
+        <TabsContent value="kanban">
+          <TasksKanbanBoard />
+        </TabsContent>
       </Tabs>
     </>
   );

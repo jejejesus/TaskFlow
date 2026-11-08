@@ -1,6 +1,7 @@
 import { apiFetch } from "./helper";
 
 export type { PagedResponse } from "./helper";
+export { ApiError } from "./helper";
 
 // ============================================
 // Tipos / DTOs
@@ -18,13 +19,13 @@ export interface ProjectResponse {
 export interface CreateProjectRequest {
   name: string;
   description?: string | null;
-  color?: string; // default "#6366F1"
+  color?: string;
 }
 
 export interface UpdateProjectRequest {
   name: string;
   description?: string | null;
-  color?: string; // default "#6366F1"
+  color?: string;
 }
 
 export interface ProjectSummaryResponse {

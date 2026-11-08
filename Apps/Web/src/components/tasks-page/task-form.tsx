@@ -38,6 +38,7 @@ import {
 import { priorityLabels } from "@/lib/util-constants/tasks-constants";
 import { toast } from "../ui/toast";
 import { Spinner } from "../ui/spinner";
+import { ProjectResponse, projectsApi } from "@/lib/api/projects";
 
 function formatDate(value: Date | undefined) {
   if (!value) return "Sin fecha límite";
@@ -59,11 +60,14 @@ export default function TaskFormDialog({
   task?: TaskResponse | null;
   onSaved?: (task: TaskResponse) => void;
 }) {
+  const [projects, setProjects] = useState<ProjectResponse[]>([]);
+  const [loading, setLoading] = useState(true);
   const isEditing = Boolean(task);
   const [submitting, setSubmitting] = useState(false);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [projectId, setProjectId] = useState("");
   const [priority, setPriority] = useState<TaskPriority>(TaskPriority.Low);
   const [dueDate, setDueDate] = useState<Date>();
 
@@ -73,6 +77,7 @@ export default function TaskFormDialog({
     if (task) {
       setTitle(task.title);
       setDescription(task.description ?? "");
+      setProjectId(task.projectId ?? "");
       setPriority(task.priority);
       setDueDate(task.dueDate ?? undefined);
     } else {
@@ -80,6 +85,20 @@ export default function TaskFormDialog({
       setDescription("");
       setPriority(TaskPriority.Low);
     }
+
+    projectsApi
+      .list()
+      .then((response) => setProjects(response))
+      .catch((cause: unknown) =>
+        toast.add({
+          title: "Error al cargar los proyectos",
+          description:
+            cause instanceof ApiError ? cause.message : "No se pudieron cargar los proyectos.",
+          type: "error",
+          priority: "high",
+        }),
+      )
+      .finally(() => setLoading(false));
   }, [open, task]);
 
   let priorities = Object.entries(priorityLabels).map(([key, label]) => ({
@@ -96,12 +115,10 @@ export default function TaskFormDialog({
     const payload: CreateTaskRequest | UpdateTaskRequest = {
       title: title,
       description: description,
+      projectId: projectId === "" ? null : projectId,
       priority: priority,
       dueDate: dueDate ?? null,
-      projectId: task?.projectId ?? null,
     };
-
-    console.log(payload);
 
     try {
       const saved = task ? await tasksApi.update(task.id, payload) : await tasksApi.create(payload);
@@ -112,6 +129,9 @@ export default function TaskFormDialog({
         type: "success",
       });
 
+      const newProject = projects.find((p) => String(p.id) === projectId);
+      saved.projectName = newProject?.name || null;
+      saved.projectColor = newProject?.color || "#6366F1";
       onSaved?.(saved);
     } catch (cause: unknown) {
       toast.add({
@@ -141,7 +161,9 @@ export default function TaskFormDialog({
 
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="title">Título</FieldLabel>
+              <FieldLabel htmlFor="title">
+                Título <span className="text-destructive">*</span>
+              </FieldLabel>
               <Input
                 id="title"
                 name="title"
@@ -161,6 +183,32 @@ export default function TaskFormDialog({
                 className="resize-none"
                 disabled={submitting}
               />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="project">Proyecto</FieldLabel>
+              <Select
+                items={[
+                  { value: "", label: "Sin proyecto" },
+                  ...projects.map((p) => ({ value: String(p.id), label: p.name })),
+                ]}
+                value={projectId}
+                onValueChange={(value) => setProjectId(value ?? "")}
+              >
+                <SelectTrigger id="project" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent alignItemWithTrigger>
+                  <SelectGroup>
+                    <SelectItem value="">Sin proyecto</SelectItem>
+                    {projects.map(({ id, name }) => (
+                      <SelectItem key={id} value={String(id)}>
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </Field>
 
             <Field className="max-w-40">

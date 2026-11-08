@@ -17,19 +17,19 @@ import {
 } from "@hugeicons/core-free-icons";
 import { Skeleton } from "../ui/skeleton";
 
-type SummaryCounts = {
-  total: number;
-  completed: number;
-  pending: number;
-};
-
-type SummaryProps = {
-  counts: SummaryCounts;
+export function Summary({
+  counts,
+  projectCount,
+  loading = false,
+}: {
+  counts: {
+    total: number;
+    completed: number;
+    pending: number;
+  };
   projectCount: number;
   loading?: boolean;
-};
-
-export function Summary({ counts, projectCount, loading = false }: SummaryProps) {
+}) {
   const items = [
     {
       label: "Total de tareas",

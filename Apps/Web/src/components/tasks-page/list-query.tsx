@@ -19,7 +19,10 @@ import {
 } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { Field, FieldLabel } from "../ui/field";
-import { GetTasksQuery, TaskAllowedSortFields } from "@/lib/api/tasks";
+import { GetTasksQuery } from "@/lib/api/tasks";
+
+// Valor centinela para "Todos"
+const ALL_VALUE = "all";
 
 export default function TaskQuery({
   queryParams,
@@ -56,6 +59,12 @@ export default function TaskQuery({
     });
   };
 
+  // Valores actuales como string para los Select (o "all" si no hay filtro)
+  const statusValue = queryParams.Status !== undefined ? String(queryParams.Status) : ALL_VALUE;
+  const priorityValue =
+    queryParams.Priority !== undefined ? String(queryParams.Priority) : ALL_VALUE;
+  const sortByValue = queryParams.SortBy ?? undefined;
+
   return (
     <div className="flex gap-2">
       <Field className="w-full max-w-72">
@@ -79,50 +88,94 @@ export default function TaskQuery({
       <Field className="w-full max-w-48">
         <FieldLabel>Estatus</FieldLabel>
         <ButtonGroup>
-          <FilterSelect
-            labels={statusLabels}
-            addAll="Todos"
-            value={queryParams.Status?.toString()}
-            onValueChange={(v) =>
+          <Select
+            value={statusValue}
+            onValueChange={(value) => {
               onQueryChange({
-                Status: v === undefined ? undefined : (Number(v) as GetTasksQuery["Status"]),
+                Status: value === ALL_VALUE ? undefined : Number(value),
                 Page: 1,
-              })
-            }
-          />
+              });
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Todos">
+                {(value: string) =>
+                  value === ALL_VALUE ? "Todos" : (statusLabels[Number(value)] ?? "Todos")
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger>
+              <SelectGroup>
+                <SelectItem value={ALL_VALUE}>Todos</SelectItem>
+                {Object.entries(statusLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </ButtonGroup>
       </Field>
 
       <Field className="w-full max-w-48">
         <FieldLabel>Prioridad</FieldLabel>
         <ButtonGroup>
-          <FilterSelect
-            labels={priorityLabels}
-            addAll="Todas"
-            value={queryParams.Priority?.toString()}
-            onValueChange={(v) =>
+          <Select
+            value={priorityValue}
+            onValueChange={(value) => {
               onQueryChange({
-                Priority: v === undefined ? undefined : (Number(v) as GetTasksQuery["Priority"]),
+                Priority: value === ALL_VALUE ? undefined : Number(value),
                 Page: 1,
-              })
-            }
-          />
+              });
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Todas">
+                {(value: string) =>
+                  value === ALL_VALUE ? "Todas" : (priorityLabels[Number(value)] ?? "Todas")
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger>
+              <SelectGroup>
+                <SelectItem value={ALL_VALUE}>Todas</SelectItem>
+                {Object.entries(priorityLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </ButtonGroup>
       </Field>
 
-      <Field className="w-full max-w-50">
+      <Field className="w-full max-w-60">
         <FieldLabel>Ordenar por</FieldLabel>
         <ButtonGroup>
-          <FilterSelect
-            labels={taskSortFieldLabels}
-            value={queryParams.SortBy ?? undefined}
-            onValueChange={(v) =>
-              onQueryChange({
-                SortBy: (v as TaskAllowedSortFields | undefined) ?? undefined,
-                Page: 1,
-              })
-            }
-          />
+          <Select
+            value={sortByValue}
+            onValueChange={(value) => {
+              onQueryChange({ SortBy: value as any, Page: 1 });
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Fecha de creación">
+                {(value: string) => taskSortFieldLabels[value]}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger>
+              <SelectGroup>
+                {Object.entries(taskSortFieldLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+
           <Tooltip>
             <TooltipTrigger
               render={
@@ -146,58 +199,5 @@ export default function TaskQuery({
         </ButtonGroup>
       </Field>
     </div>
-  );
-}
-
-function FilterSelect({
-  labels,
-  addAll,
-  value,
-  onValueChange,
-}: {
-  labels: Record<number, string>;
-  addAll?: string;
-  value?: string;
-  onValueChange: (value: string | undefined) => void;
-}) {
-  const ALL_VALUE = "__all__";
-
-  const selectLabels = Object.entries(labels).map(([key, label]) => ({
-    value: key,
-    label,
-  }));
-
-  if (addAll) {
-    selectLabels.unshift({ value: ALL_VALUE, label: addAll });
-  }
-
-  const currentValue = value ?? (addAll ? ALL_VALUE : undefined);
-
-  return (
-    <Select
-      value={currentValue}
-      onValueChange={(v) => {
-        onValueChange(v === ALL_VALUE || v === null ? undefined : v);
-      }}
-    >
-      <SelectTrigger className="w-full">
-        <SelectValue>
-          {(selected: string | undefined) =>
-            selected === undefined || selected === ALL_VALUE
-              ? addAll
-              : (selectLabels.find((item) => item.value === selected)?.label ?? selected)
-          }
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent alignItemWithTrigger>
-        <SelectGroup>
-          {selectLabels.map((item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectGroup>
-      </SelectContent>
-    </Select>
   );
 }

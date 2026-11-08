@@ -30,14 +30,7 @@ import {
   TaskResponse,
   tasksApi,
 } from "@/lib/api/tasks";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "../ui/empty";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "../ui/empty";
 import { Spinner } from "../ui/spinner";
 import { Badge } from "../ui/badge";
 import TasksPagination from "./list-pagination";
@@ -68,8 +61,8 @@ export default function TasksList({
   tasks,
   loading = false,
   queryParams,
-  onEditTask,
-  onDeleteTask,
+  onEdit,
+  onDelete,
   onSaved,
   onQueryChange,
   onPageChange,
@@ -77,8 +70,8 @@ export default function TasksList({
   tasks: PagedResponse<TaskResponse>;
   loading?: boolean;
   queryParams: GetTasksQuery;
-  onEditTask: (task: TaskResponse) => void;
-  onDeleteTask: (taskId: string) => void;
+  onEdit: (task: TaskResponse) => void;
+  onDelete: (taskId: string) => void;
   onSaved?: (task: TaskResponse) => void;
   onQueryChange: (updates: Partial<GetTasksQuery>) => void;
   onPageChange: (page: number) => void;
@@ -127,7 +120,7 @@ export default function TasksList({
         type: "success",
       });
 
-      onDeleteTask?.(taskToDelete.id);
+      onDelete?.(taskToDelete.id);
     } catch (cause: unknown) {
       toast.add({
         title: "Error al eliminar la tarea",
@@ -151,18 +144,13 @@ export default function TasksList({
             <EmptyMedia variant="icon">
               <HugeiconsIcon icon={TaskRemove01Icon} strokeWidth={2} />
             </EmptyMedia>
-            <EmptyTitle>Aún no tienes tareas</EmptyTitle>
+            <EmptyTitle>Sin tareas</EmptyTitle>
             <EmptyDescription>
-              No has creado o no te han asignado tareas todavía. Inicia creando una tarea o un
-              proyecto.
+              No tienes tareas asignadas todavía o no hay tareas con los filtros seleccionados.
             </EmptyDescription>
           </EmptyHeader>
-          <EmptyContent className="flex-row justify-center gap-2">
-            <Button>Crear tarea</Button>
-            <Button variant="outline">Crear proyecto</Button>
-          </EmptyContent>
         </Empty>
-      ) : loading && tasks.items.length <= 0 ? (
+      ) : loading ? (
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -201,9 +189,9 @@ export default function TasksList({
                   <TableCell className="font-medium">{task.title}</TableCell>
                   <TableCell>
                     {task.projectName && (
-                      <Badge className="py-3" variant="secondary">
+                      <Badge className="py-3 pr-3" variant="secondary">
                         <span
-                          className="size-3 shrink-0 rounded-sm"
+                          className="size-3 shrink-0 rounded-full"
                           style={{ backgroundColor: task.projectColor || "#6366F1" }}
                         />
                         {task.projectName}
@@ -235,7 +223,7 @@ export default function TasksList({
                         }
                       />
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEditTask(task)}>Editar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEdit(task)}>Editar</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDuplicateTask(task)}>
                           Duplicar
                         </DropdownMenuItem>

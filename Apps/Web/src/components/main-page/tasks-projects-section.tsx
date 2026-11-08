@@ -15,13 +15,15 @@ function formatDate(value: Date | null) {
   }).format(new Date(value));
 }
 
-type SummaryProps = {
+export default function TaskProjects({
+  tasks,
+  projects,
+  loading = false,
+}: {
   tasks: TaskResponse[];
   projects: ProjectResponse[];
   loading?: boolean;
-};
-
-export default function TaskProjects({ tasks, projects, loading = false }: SummaryProps) {
+}) {
   return (
     <section className="grid gap-6 xl:grid-cols-3">
       <Card className="xl:col-span-2">
