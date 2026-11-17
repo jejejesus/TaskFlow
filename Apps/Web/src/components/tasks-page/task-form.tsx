@@ -22,9 +22,9 @@ import {
   UpdateTaskRequest,
 } from "@/lib/api/tasks";
 import { ApiError } from "@/lib/api/helper";
-import { Textarea } from "../ui/textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Calendar } from "../ui/calendar";
+import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Calendar03Icon } from "@hugeicons/core-free-icons";
 import {
@@ -34,11 +34,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
+} from "@/components/ui/select";
 import { priorityLabels } from "@/lib/util-constants/tasks-constants";
-import { toast } from "../ui/toast";
-import { Spinner } from "../ui/spinner";
-import { ProjectResponse, projectsApi } from "@/lib/api/projects";
+import { toast } from "@/components/ui/toast";
+import { Spinner } from "@/components/ui/spinner";
 
 function formatDate(value: Date | undefined) {
   if (!value) return "Sin fecha límite";
@@ -53,15 +52,12 @@ export default function TaskFormDialog({
   open,
   onOpenChange,
   task,
-  onSaved,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task?: TaskResponse | null;
   onSaved?: (task: TaskResponse) => void;
 }) {
-  const [projects, setProjects] = useState<ProjectResponse[]>([]);
-  const [loading, setLoading] = useState(true);
   const isEditing = Boolean(task);
   const [submitting, setSubmitting] = useState(false);
 
@@ -86,7 +82,7 @@ export default function TaskFormDialog({
       setPriority(TaskPriority.Low);
     }
 
-    projectsApi
+    /*projectsApi
       .list()
       .then((response) => setProjects(response))
       .catch((cause: unknown) =>
@@ -98,7 +94,7 @@ export default function TaskFormDialog({
           priority: "high",
         }),
       )
-      .finally(() => setLoading(false));
+      .finally(() => setLoading(false));*/
   }, [open, task]);
 
   let priorities = Object.entries(priorityLabels).map(([key, label]) => ({
@@ -128,11 +124,6 @@ export default function TaskFormDialog({
         description: saved.title,
         type: "success",
       });
-
-      const newProject = projects.find((p) => String(p.id) === projectId);
-      saved.projectName = newProject?.name || null;
-      saved.projectColor = newProject?.color || "#6366F1";
-      onSaved?.(saved);
     } catch (cause: unknown) {
       toast.add({
         title: "Error al guardar la tarea",
@@ -185,7 +176,7 @@ export default function TaskFormDialog({
               />
             </Field>
 
-            <Field>
+            {/*<Field>
               <FieldLabel htmlFor="project">Proyecto</FieldLabel>
               <Select
                 items={[
@@ -209,7 +200,7 @@ export default function TaskFormDialog({
                   </SelectGroup>
                 </SelectContent>
               </Select>
-            </Field>
+            </Field>*/}
 
             <Field className="max-w-40">
               <FieldLabel htmlFor="priority">Prioridad</FieldLabel>

@@ -2,9 +2,9 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProjectResponse } from "@/lib/api/projects";
 import { TaskResponse } from "@/lib/api/tasks";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { statusLabels, statusStyles } from "@/lib/util-constants/tasks-constants";
-import { Badge } from "../ui/badge";
+import { Badge } from "@/components/ui/badge";
 
 function formatDate(value: Date | null) {
   if (!value) return "Sin fecha límite";
@@ -118,7 +118,12 @@ export default function TaskProjects({
                     style={{ backgroundColor: project.color || "#6366F1" }}
                   />
                   <div className="min-w-0">
-                    <p className="truncate font-medium">{project.name}</p>
+                    <Link
+                      className="truncate font-medium hover:underline"
+                      href={`/projects/${project.id}`}
+                    >
+                      {project.name}
+                    </Link>
                     <p className="truncate text-sm text-muted-foreground">
                       {project.description || "Sin descripción"}
                     </p>

@@ -15,7 +15,7 @@ import {
   Clock01Icon,
   FolderKanbanIcon,
 } from "@hugeicons/core-free-icons";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function Summary({
   counts,

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -15,7 +16,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { TaskRemove01Icon, MoreVerticalIcon } from "@hugeicons/core-free-icons";
+import {
+  TaskRemove01Icon,
+  MoreVerticalIcon,
+  Edit03Icon,
+  Delete02Icon,
+  Copy02Icon,
+} from "@hugeicons/core-free-icons";
 import {
   statusLabels,
   statusStyles,
@@ -31,10 +38,8 @@ import {
   tasksApi,
 } from "@/lib/api/tasks";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "../ui/empty";
-import { Spinner } from "../ui/spinner";
-import { Badge } from "../ui/badge";
-import TasksPagination from "./list-pagination";
-import TaskQuery from "./list-query";
+import { Spinner } from "@/components/ui/spinner";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,9 +49,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../ui/alert-dialog";
-import { useState } from "react";
-import { toast } from "../ui/toast";
+} from "@/components/ui/alert-dialog";
+import { toast } from "@/components/ui/toast";
+import TasksPagination from "./list-pagination";
+import TaskQuery from "./list-query";
 
 function formatDate(value: Date | null) {
   if (!value) return "Sin fecha límite";
@@ -223,8 +229,12 @@ export default function TasksList({
                         }
                       />
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(task)}>Editar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEdit(task)}>
+                          <HugeiconsIcon icon={Edit03Icon} />
+                          Editar
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDuplicateTask(task)}>
+                          <HugeiconsIcon icon={Copy02Icon} />
                           Duplicar
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -232,6 +242,7 @@ export default function TasksList({
                           variant="destructive"
                           onClick={() => setTaskToDelete(task)}
                         >
+                          <HugeiconsIcon icon={Delete02Icon} />
                           Eliminar
                         </DropdownMenuItem>
                       </DropdownMenuContent>

@@ -1,30 +1,27 @@
 import { ApiError, ProjectResponse, projectsApi } from "@/lib/api/projects";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "../ui/empty";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "../ui/button";
-import { MoreVerticalIcon, TaskRemove01Icon } from "@hugeicons/core-free-icons";
-import { Spinner } from "../ui/spinner";
+import { Button } from "@/components/ui/button";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "../ui/alert-dialog";
+  Delete02Icon,
+  Edit03Icon,
+  MoreVerticalIcon,
+  TaskRemove01Icon,
+  ViewIcon,
+} from "@hugeicons/core-free-icons";
 import { useState } from "react";
-import { toast } from "../ui/toast";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { toast } from "@/components/ui/toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Badge } from "../ui/badge";
+} from "@/components/ui/dropdown-menu";
+import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
+import DeleteDialog from "./delete-dialog";
 
 export default function ProjectsList({
   projects,
@@ -82,14 +79,21 @@ export default function ProjectsList({
           </EmptyHeader>
         </Empty>
       ) : loading ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Spinner />
-            </EmptyMedia>
-            <EmptyTitle>Cargando proyectos...</EmptyTitle>
-          </EmptyHeader>
-        </Empty>
+        <div className="flex flex-wrap gap-3">
+          {[...Array(4).keys()].map((key) => (
+            <Card className="border-t-3 w-sm h-30" key={key}>
+              <CardHeader>
+                <CardTitle>
+                  <Skeleton className="h-5 w-2/3 mb-1" />
+                </CardTitle>
+                <CardDescription className="line-clamp-3">
+                  <Skeleton className="h-4 w-full mb-1" />
+                  <Skeleton className="h-4 w-4/5 mb-1" />
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
       ) : (
         <>
           <DeleteDialog
@@ -103,28 +107,15 @@ export default function ProjectsList({
             deleting={deleting}
           />
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Proyecto</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {projects.map((project) => (
-                <TableRow key={project.id}>
-                  <TableCell className="font-medium">
-                    <Badge
-                      className="py-3"
-                      variant="secondary"
-                      style={{ backgroundColor: project.color || "#6366F1" }}
-                    >
-                      {project.name}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{project.description}</TableCell>
-                  <TableCell className="text-right">
+          <div className="flex flex-wrap gap-3">
+            {projects.map((project) => (
+              <Card
+                className="border-t-3 w-sm h-30"
+                style={{ borderTopColor: project.color || "#6366F1" }}
+                key={project.id}
+              >
+                <CardHeader>
+                  <CardAction>
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         render={
@@ -134,70 +125,41 @@ export default function ProjectsList({
                         }
                       />
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(project)}>Editar</DropdownMenuItem>
+                        <DropdownMenuItem
+                          render={
+                            <Link href={`/projects/${project.id}`}>
+                              <HugeiconsIcon icon={ViewIcon} />
+                              Ver
+                            </Link>
+                          }
+                        />
+                        <DropdownMenuItem onClick={() => onEdit(project)}>
+                          <HugeiconsIcon icon={Edit03Icon} />
+                          Editar
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           variant="destructive"
                           onClick={() => setProjectToDelete(project)}
                         >
+                          <HugeiconsIcon icon={Delete02Icon} />
                           Eliminar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </CardAction>
+                  <CardTitle>
+                    <Link className="hover:underline" href={`/projects/${project.id}`}>
+                      {project.name}
+                    </Link>
+                  </CardTitle>
+                  <CardDescription className="line-clamp-3">{project.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
         </>
       )}
     </section>
-  );
-}
-
-function DeleteDialog({
-  project,
-  onOpenChange,
-  onConfirm,
-  deleting,
-}: {
-  project: ProjectResponse | null;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
-  deleting: boolean;
-}) {
-  return (
-    <AlertDialog open={Boolean(project)} onOpenChange={onOpenChange}>
-      <AlertDialogContent size="sm">
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Eliminar proyecto?</AlertDialogTitle>
-          <AlertDialogDescription>
-            El proyecto {project?.name} se eliminará de manera permanente. No habrá vuelta atrás.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel variant="outline" disabled={deleting}>
-            Cancelar
-          </AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            onClick={(e) => {
-              e.preventDefault();
-              onConfirm();
-            }}
-            disabled={deleting}
-          >
-            {deleting ? (
-              <>
-                <Spinner />
-                Eliminando
-              </>
-            ) : (
-              <>Eliminar</>
-            )}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
   );
 }

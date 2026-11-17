@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   GetTasksQuery,
   TaskAllowedSortFields,
@@ -25,7 +26,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import TasksKanbanBoard from "@/components/tasks-page/kanban-section";
 
+type ViewMode = "kanban" | "list";
+
 export default function Page() {
+  return (
+    <Suspense>
+      <PageContent />
+    </Suspense>
+  );
+}
+
+function PageContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const viewParam = searchParams.get("view");
+  const currentView: ViewMode = viewParam === "list" ? "list" : "kanban";
+
   const [tasks, setTasks] = useState<PagedResponse<TaskResponse>>({
     items: [],
     page: 1,
@@ -62,6 +80,13 @@ export default function Page() {
       });
   }, [queryParams]);
 
+  function handleViewChange(newView: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("view", newView);
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }
+
   function handleCreateTask() {
     setEditingTask(null);
     setTaskFormDialogState(true);
@@ -97,7 +122,6 @@ export default function Page() {
 
   function handleQueryChange(updates: Partial<GetTasksQuery>) {
     setQueryParams((prev) => ({ ...prev, ...updates }));
-    console.log(queryParams);
   }
 
   function handlePageChange(newPage: number) {
@@ -118,17 +142,20 @@ export default function Page() {
         onSaved={handleTaskSaved}
       />
 
-      <Tabs defaultValue="overview">
+      <Tabs value={currentView} onValueChange={handleViewChange}>
         <TabsList>
-          <TabsTrigger value="list">
-            <HugeiconsIcon icon={ListIcon} strokeWidth={2} />
-            Lista
-          </TabsTrigger>
           <TabsTrigger value="kanban">
             <HugeiconsIcon icon={KanbanIcon} strokeWidth={2} />
             Kanban
           </TabsTrigger>
+          <TabsTrigger value="list">
+            <HugeiconsIcon icon={ListIcon} strokeWidth={2} />
+            Lista
+          </TabsTrigger>
         </TabsList>
+        <TabsContent value="kanban">
+          <TasksKanbanBoard />
+        </TabsContent>
         <TabsContent value="list">
           <TaskList
             tasks={tasks}
@@ -140,9 +167,6 @@ export default function Page() {
             onQueryChange={handleQueryChange}
             onPageChange={handlePageChange}
           />
-        </TabsContent>
-        <TabsContent value="kanban">
-          <TasksKanbanBoard />
         </TabsContent>
       </Tabs>
     </>

@@ -8,7 +8,7 @@ import {
   UpdateProjectRequest,
 } from "@/lib/api/projects";
 import { SubmitEvent, useEffect, useState } from "react";
-import { toast } from "../ui/toast";
+import { toast } from "@/components/ui/toast";
 import {
   Dialog,
   DialogClose,
@@ -17,13 +17,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
-import { Field, FieldGroup, FieldLabel } from "../ui/field";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
-import { Button } from "../ui/button";
-import { Spinner } from "../ui/spinner";
-import { ColorPicker } from "../ui/color-picker";
+} from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { ColorPicker } from "@/components/ui/color-picker";
 
 export default function ProjectFormDialog({
   open,

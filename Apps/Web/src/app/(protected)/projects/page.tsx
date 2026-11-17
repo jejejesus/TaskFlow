@@ -53,6 +53,7 @@ export default function Page() {
   function handleProjectDeleted(projectId: string) {
     setProjects((prev) => prev.filter((p) => p.id !== projectId));
   }
+
   let content = (
     <>
       <ProjectFormDialog

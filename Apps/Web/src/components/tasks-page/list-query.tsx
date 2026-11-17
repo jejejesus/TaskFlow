@@ -17,11 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { Field, FieldLabel } from "../ui/field";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { GetTasksQuery } from "@/lib/api/tasks";
 
-// Valor centinela para "Todos"
 const ALL_VALUE = "all";
 
 export default function TaskQuery({
