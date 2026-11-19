@@ -19,6 +19,13 @@
 - [page.tsx (Project details)](file://Apps/Web/src/app/(protected)/projects/[projectSlug]/page.tsx)
 </cite>
 
+## Update Summary
+**Changes Made**
+- Updated Frontend Integration Patterns section to reflect consolidated DeleteDialog component
+- Modified project form dialog documentation to include DeleteDialog export
+- Updated component architecture diagrams to show new DeleteDialog location
+- Enhanced delete operation documentation with improved code organization
+
 ## Table of Contents
 1. Introduction
 2. Project Structure
@@ -45,7 +52,7 @@ The project follows a layered architecture:
 graph TB
 subgraph "Frontend"
 FE_List["Projects List Page"]
-FE_Form["Project Form Dialog"]
+FE_Form["Project Form Dialog + DeleteDialog"]
 FE_Details["Project Details Page"]
 end
 subgraph "API Layer"
@@ -289,18 +296,27 @@ Constraints:
 - Calls projectsApi.remove() for deletion and updates local state.
 
 User flows:
-- Create: Click “Create project” -> open dialog -> submit -> refresh list.
+- Create: Click "Create project" -> open dialog -> submit -> refresh list.
 - Edit: Open dialog with existing project -> submit -> update list item.
-- Delete: Confirm via alert dialog -> remove -> optimistic UI update.
+- Delete: Confirm via consolidated DeleteDialog -> remove -> optimistic UI update.
 
 **Section sources**
 - [page.tsx (Projects list):12-55](file://Apps/Web/src/app/(protected)/projects/page.tsx#L12-L55)
 - [page.tsx (Projects list):57-107](file://Apps/Web/src/app/(protected)/projects/page.tsx#L57-L107)
 
-#### Project Form Dialog
+#### Project Form Dialog and DeleteDialog
+**Updated** The project form dialog now includes a consolidated DeleteDialog component for improved code organization.
+
 - Handles both create and update based on presence of project prop.
 - Submits either projectsApi.create() or projectsApi.update().
 - Shows success/error toasts and closes dialog after submission.
+- **New**: Exports DeleteDialog component for reuse across the application.
+
+DeleteDialog component:
+- Reusable confirmation dialog for project deletion.
+- Integrated directly into project-form.tsx for better code organization.
+- Provides consistent confirmation behavior across the application.
+- Handles loading states and error scenarios.
 
 Validation:
 - HTML form requires name field.
@@ -309,11 +325,12 @@ Validation:
 **Section sources**
 - [project-form.tsx:38-105](file://Apps/Web/src/components/projects-page/project-form.tsx#L38-L105)
 - [project-form.tsx:107-179](file://Apps/Web/src/components/projects-page/project-form.tsx#L107-L179)
+- [project-form.tsx:181-227](file://Apps/Web/src/components/projects-page/project-form.tsx#L181-L227)
 
 #### Projects List Section
 - Renders cards with actions: view, edit, delete.
 - Uses DropdownMenu for actions.
-- Integrates DeleteDialog for confirmation and deletion.
+- Integrates consolidated DeleteDialog for confirmation and deletion.
 
 Optimistic updates:
 - On successful delete, removes the project from local list immediately.
@@ -326,10 +343,11 @@ Optimistic updates:
 - Loads project by id and displays metadata.
 - Provides edit and delete actions.
 - Integrates task listing with filtering and pagination.
+- **Updated**: Uses consolidated DeleteDialog component from project-form.tsx.
 
 User flows:
 - Edit project: opens ProjectFormDialog pre-filled with project data.
-- Delete project: confirms via DeleteDialog, then navigates back.
+- Delete project: confirms via consolidated DeleteDialog, then navigates back.
 
 **Section sources**
 - [page.tsx (Project details):45-96](file://Apps/Web/src/app/(protected)/projects/[projectSlug]/page.tsx#L45-L96)
@@ -513,8 +531,7 @@ Project --> ProjectName : "uses"
 - Ordering by name is applied server-side for consistent lists.
 - Task counts computed via server-side grouping reduce payload size.
 - Frontend uses optimistic updates for delete to improve perceived performance.
-
-[No sources needed since this section provides general guidance]
+- Consolidated DeleteDialog reduces component duplication and improves maintainability.
 
 ## Troubleshooting Guide
 Common issues and resolutions:
@@ -532,6 +549,7 @@ Common issues and resolutions:
 Frontend error handling:
 - Display toast messages for success and error outcomes.
 - Show alerts for load-time errors and empty states.
+- Consolidated DeleteDialog provides consistent error handling across the application.
 
 **Section sources**
 - [ProjectsController.cs:39-43](file://Services/Services.Api/Controllers/ProjectsController.cs#L39-L43)
@@ -542,6 +560,4 @@ Frontend error handling:
 - [ProjectService.cs:101-127](file://Services/Services.Application/Services/ProjectService.cs#L101-L127)
 
 ## Conclusion
-The project CRUD system combines robust backend validation, clear separation of concerns across layers, and responsive frontend interactions. Controllers expose well-defined endpoints, services enforce business rules and ownership, repositories manage persistence efficiently, and domain models protect invariants. Frontend components integrate seamlessly, providing intuitive workflows for creating, reading, updating, and deleting projects while handling errors gracefully.
-
-[No sources needed since this section summarizes without analyzing specific files]
+The project CRUD system combines robust backend validation, clear separation of concerns across layers, and responsive frontend interactions. Controllers expose well-defined endpoints, services enforce business rules and ownership, repositories manage persistence efficiently, and domain models protect invariants. Frontend components integrate seamlessly, providing intuitive workflows for creating, reading, updating, and deleting projects while handling errors gracefully. The recent consolidation of the DeleteDialog component into the project-form.tsx file demonstrates improved code organization and maintainability, making the delete functionality more accessible and consistent across the application.

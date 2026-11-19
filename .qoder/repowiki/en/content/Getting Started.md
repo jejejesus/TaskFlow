@@ -6,12 +6,16 @@
 - [Apps/Web/README.md](file://Apps/Web/README.md)
 - [Services/README.md](file://Services/README.md)
 - [package.json](file://Apps/Web/package.json)
-- [next.config.ts](file://Apps/Web/next.config.ts)
-- [Program.cs](file://Services/Services.Api/Program.cs)
-- [AppDbContext.cs](file://Services/Services.Infrastructure/Persistence/AppDbContext.cs)
-- [JwtOptions.cs](file://Services/Services.Infrastructure/Identity/JwtOptions.cs)
 - [appsettings.Example.json](file://Services/Services.Api/appsettings.Example.json)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Updated project structure section to reflect the new modular README organization
+- Enhanced installation instructions with detailed environment configuration steps
+- Added comprehensive troubleshooting section covering common setup issues
+- Expanded verification procedures for both frontend and backend components
+- Updated architecture overview to reflect the Next.js 16 and ASP.NET Core 10 stack
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -28,7 +32,7 @@
 12. [Conclusion](#conclusion)
 
 ## Introduction
-TaskFlow is a full-stack task and project management application with a Next.js frontend and an ASP.NET Core backend. It provides user authentication, project management, and task tracking features. The system uses PostgreSQL for data storage and JWT-based authentication to secure API access.
+TaskFlow is a full-stack task and project management application built with Next.js 16 frontend and ASP.NET Core 10 backend. It provides user authentication, project management, and task tracking features using PostgreSQL for data storage and JWT-based authentication for API security.
 
 Key capabilities include:
 - User registration and login using email and password.
@@ -37,14 +41,14 @@ Key capabilities include:
 - Searching, filtering, sorting, and paginating tasks.
 - A dashboard and dedicated pages for tasks and projects.
 
-The repository includes both the web application and the API service, along with configuration examples and documentation for local development.
+The repository includes both the web application and the API service, along with comprehensive documentation for local development.
 
 **Section sources**
 - [README.md:1-11](file://README.md#L1-L11)
 - [Services/README.md:1-11](file://Services/README.md#L1-L11)
 
 ## Project Structure
-The repository is organized into two main parts:
+The repository is organized into two main parts with dedicated documentation:
 - `Services/`: ASP.NET Core API solution containing controllers, application services, domain entities, infrastructure, and database migrations.
 - `Apps/Web/`: Next.js 16 web application providing the user interface and consuming the API.
 
@@ -85,7 +89,6 @@ Api --> Infra
 - [Apps/Web/README.md:5-14](file://Apps/Web/README.md#L5-L14)
 - [Apps/Web/README.md:39-44](file://Apps/Web/README.md#L39-L44)
 - [Services/README.md:57-94](file://Services/README.md#L57-L94)
-- [AppDbContext.cs:10-23](file://Services/Services.Infrastructure/Persistence/AppDbContext.cs#L10-L23)
 
 ## Architecture Overview
 The frontend runs on Next.js and proxies requests to the backend API. The backend configures OpenAPI and Scalar in development, applies authentication and authorization middleware, and maps controllers. The database layer uses EF Core with configurations for tasks and projects.
@@ -109,16 +112,19 @@ Next-->>Browser : JSON response
 
 **Diagram sources**
 - [Apps/Web/README.md:39-44](file://Apps/Web/README.md#L39-L44)
-- [Program.cs:20-37](file://Services/Services.Api/Program.cs#L20-L37)
 
 ## Prerequisites
 Before starting, ensure you have the following installed:
-- .NET 10 SDK
+- .NET 10 SDK and dotnet-ef CLI tool version 10.x
 - PostgreSQL server accessible locally or remotely
 - Node.js compatible with Next.js 16 (minimum version 20.9.0)
 - pnpm package manager (the web project declares pnpm@12.21.0)
 
-For the backend, also install the EF Core CLI tool if it is not already available globally.
+For the backend, install the EF Core CLI tool if it is not already available globally:
+
+```bash
+dotnet tool install --global dotnet-ef --version 10.0.12
+```
 
 **Section sources**
 - [README.md:30-35](file://README.md#L30-L35)
@@ -168,7 +174,6 @@ The example file shows the expected shape but is not loaded automatically.
 - [README.md:38-50](file://README.md#L38-L50)
 - [Services/README.md:23-35](file://Services/README.md#L23-L35)
 - [appsettings.Example.json:9-16](file://Services/Services.Api/appsettings.Example.json#L9-L16)
-- [JwtOptions.cs:3-13](file://Services/Services.Infrastructure/Identity/JwtOptions.cs#L3-L13)
 
 ## Database Setup
 Ensure PostgreSQL is running and accessible. Create a database named `TaskFlow` (or adjust the connection string accordingly). Make sure the configured user has permissions to create and update database objects via EF Core migrations.
@@ -183,7 +188,6 @@ After migrations succeed, the schema for users, tasks, and projects will be crea
 **Section sources**
 - [README.md:52-60](file://README.md#L52-L60)
 - [Services/README.md:37-45](file://Services/README.md#L37-L45)
-- [AppDbContext.cs:10-23](file://Services/Services.Infrastructure/Persistence/AppDbContext.cs#L10-L23)
 
 ## Running the Application
 Start the backend and frontend in separate terminal sessions:
@@ -220,7 +224,6 @@ Note: There are no test projects configured in the solution, and the web app doe
 **Section sources**
 - [README.md:77-79](file://README.md#L77-L79)
 - [Services/README.md:47-55](file://Services/README.md#L47-L55)
-- [Program.cs:23-28](file://Services/Services.Api/Program.cs#L23-L28)
 
 ## Troubleshooting
 Common setup issues and resolutions:

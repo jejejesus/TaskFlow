@@ -3,11 +3,11 @@ schema_version: 1
 locale: en-US
 branch: main
 nodes_managed: true
-exported_at: "2026-11-19T00:19:34Z"
+exported_at: "2026-11-19T00:25:24Z"
 modules:
     "":
-        dir_name: TaskFlow Task & Project Management Platform
-        title: TaskFlow Task & Project Management Platform
+        dir_name: TaskFlow Monorepo (ASP.NET Core API + Next.js Web)
+        title: TaskFlow Monorepo (ASP.NET Core API + Next.js Web)
         scope:
             - README.md
             - .gitignore

@@ -1,6 +1,6 @@
 schema_version: 1
 module_path: ""
-title: TaskFlow Task & Project Management Platform
+title: TaskFlow Monorepo (ASP.NET Core API + Next.js Web)
 scope:
     - README.md
     - .gitignore
