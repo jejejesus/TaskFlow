@@ -120,7 +120,7 @@ export default function TaskProjects({
                   <div className="min-w-0">
                     <Link
                       className="truncate font-medium hover:underline"
-                      href={`/projects/${project.id}`}
+                      href={`/projects/${project.id}?view=kanban`}
                     >
                       {project.name}
                     </Link>

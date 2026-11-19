@@ -1,0 +1,1 @@
+ASP.NET Core 10, ASP.NET Core Identity with `IdentityRole<Guid>`, JWT Bearer tokens (SymmetricSecurityKey, Base64 secret ≥ 32 bytes), Entity Framework Core with Npgsql provider for PostgreSQL, Scalar.AspNetCore for interactive docs, and OpenAPI document transformers.

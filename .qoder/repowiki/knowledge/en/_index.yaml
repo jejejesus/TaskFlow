@@ -1,0 +1,27 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: en-US
+branch: main
+nodes_managed: true
+exported_at: "2026-11-19T00:19:34Z"
+modules:
+    "":
+        dir_name: TaskFlow Task & Project Management Platform
+        title: TaskFlow Task & Project Management Platform
+        scope:
+            - README.md
+            - .gitignore
+        source_files: []
+        children:
+            - backend_service
+        depends_on: []
+        related_to: []
+    backend_service:
+        dir_name: TaskFlow REST API (ASP.NET Core)
+        title: TaskFlow REST API (ASP.NET Core)
+        scope:
+            - Services/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []

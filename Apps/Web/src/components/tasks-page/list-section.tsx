@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -22,12 +22,16 @@ import {
   Edit03Icon,
   Delete02Icon,
   Copy02Icon,
+  Search01Icon,
+  Sorting01Icon,
+  Sorting02Icon,
 } from "@hugeicons/core-free-icons";
 import {
   statusLabels,
   statusStyles,
   priorityLabels,
   priorityStyles,
+  taskSortFieldLabels,
 } from "@/lib/util-constants/tasks-constants";
 import {
   ApiError,
@@ -40,19 +44,30 @@ import {
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "../ui/empty";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { toast } from "@/components/ui/toast";
-import TasksPagination from "./list-pagination";
-import TaskQuery from "./list-query";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+import { ButtonGroup } from "@/components/ui/button-group";
+import {} from "@hugeicons/core-free-icons";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { DeleteDialog } from "./task-form";
 
 function formatDate(value: Date | null) {
   if (!value) return "Sin fecha límite";
@@ -260,49 +275,275 @@ export default function TasksList({
   );
 }
 
-function DeleteDialog({
-  task,
-  onOpenChange,
-  onConfirm,
-  deleting,
+const ALL_VALUE = "all";
+
+export function TaskQuery({
+  queryParams,
+  onQueryChange,
 }: {
-  task: TaskResponse | null;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
-  deleting: boolean;
+  queryParams: GetTasksQuery;
+  onQueryChange: (updates: Partial<GetTasksQuery>) => void;
 }) {
+  const [searchInput, setSearchInput] = useState(queryParams.Search ?? "");
+
+  useEffect(() => {
+    setSearchInput(queryParams.Search ?? "");
+  }, [queryParams.Search]);
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      if ((queryParams.Search ?? "") !== searchInput) {
+        onQueryChange({ Search: searchInput || undefined, Page: 1 });
+      }
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchInput]);
+
+  const triggerSearchNow = () => {
+    onQueryChange({ Search: searchInput || undefined, Page: 1 });
+  };
+
+  const ascDesc = queryParams.SortDirection ?? "asc";
+
+  const toggleAscDesc = () => {
+    onQueryChange({
+      SortDirection: ascDesc === "asc" ? "desc" : "asc",
+      Page: 1,
+    });
+  };
+
+  const statusValue = queryParams.Status !== undefined ? String(queryParams.Status) : ALL_VALUE;
+  const priorityValue =
+    queryParams.Priority !== undefined ? String(queryParams.Priority) : ALL_VALUE;
+  const sortByValue = queryParams.SortBy ?? undefined;
+
   return (
-    <AlertDialog open={Boolean(task)} onOpenChange={onOpenChange}>
-      <AlertDialogContent size="sm">
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Eliminar tarea?</AlertDialogTitle>
-          <AlertDialogDescription>
-            La tarea {task?.title} se eliminará de manera permanente. No habrá vuelta atrás.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel variant="outline" disabled={deleting}>
-            Cancelar
-          </AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
+    <div className="flex gap-2">
+      <Field className="w-full max-w-72">
+        <FieldLabel>Buscar</FieldLabel>
+        <ButtonGroup>
+          <Input
+            placeholder="Buscar..."
+            className="w-full"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") triggerSearchNow();
+            }}
+          />
+          <Button variant="outline" aria-label="Buscar" onClick={triggerSearchNow}>
+            <HugeiconsIcon icon={Search01Icon} strokeWidth={2} />
+          </Button>
+        </ButtonGroup>
+      </Field>
+
+      <Field className="w-full max-w-48">
+        <FieldLabel>Estatus</FieldLabel>
+        <ButtonGroup>
+          <Select
+            value={statusValue}
+            onValueChange={(value) => {
+              onQueryChange({
+                Status: value === ALL_VALUE ? undefined : Number(value),
+                Page: 1,
+              });
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Todos">
+                {(value: string) =>
+                  value === ALL_VALUE ? "Todos" : (statusLabels[Number(value)] ?? "Todos")
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger>
+              <SelectGroup>
+                <SelectItem value={ALL_VALUE}>Todos</SelectItem>
+                {Object.entries(statusLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </ButtonGroup>
+      </Field>
+
+      <Field className="w-full max-w-48">
+        <FieldLabel>Prioridad</FieldLabel>
+        <ButtonGroup>
+          <Select
+            value={priorityValue}
+            onValueChange={(value) => {
+              onQueryChange({
+                Priority: value === ALL_VALUE ? undefined : Number(value),
+                Page: 1,
+              });
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Todas">
+                {(value: string) =>
+                  value === ALL_VALUE ? "Todas" : (priorityLabels[Number(value)] ?? "Todas")
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger>
+              <SelectGroup>
+                <SelectItem value={ALL_VALUE}>Todas</SelectItem>
+                {Object.entries(priorityLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </ButtonGroup>
+      </Field>
+
+      <Field className="w-full max-w-60">
+        <FieldLabel>Ordenar por</FieldLabel>
+        <ButtonGroup>
+          <Select
+            value={sortByValue}
+            onValueChange={(value) => {
+              onQueryChange({ SortBy: value as any, Page: 1 });
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Fecha de creación">
+                {(value: string) => taskSortFieldLabels[value]}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger>
+              <SelectGroup>
+                {Object.entries(taskSortFieldLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label={ascDesc === "asc" ? "Orden ascendente" : "Orden descendente"}
+                  onClick={toggleAscDesc}
+                >
+                  <HugeiconsIcon
+                    icon={ascDesc === "asc" ? Sorting02Icon : Sorting01Icon}
+                    strokeWidth={2}
+                  />
+                </Button>
+              }
+            />
+            <TooltipContent>
+              <p>{ascDesc === "asc" ? "Mayor a menor" : "Menor a mayor"}</p>
+            </TooltipContent>
+          </Tooltip>
+        </ButtonGroup>
+      </Field>
+    </div>
+  );
+}
+
+export function TasksPagination({
+  tasks,
+  onPageChange,
+}: {
+  tasks: PagedResponse<TaskResponse>;
+  onPageChange: (page: number) => void;
+}) {
+  const { page: currentPage, totalPages } = tasks;
+
+  const getVisiblePages = (): number[] => {
+    if (totalPages <= 3) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    if (currentPage <= 2) {
+      return [1, 2, 3];
+    }
+
+    if (currentPage >= totalPages - 1) {
+      return [totalPages - 2, totalPages - 1, totalPages];
+    }
+
+    return [currentPage - 1, currentPage, currentPage + 1];
+  };
+
+  const visiblePages = getVisiblePages();
+  const showLeftEllipsis = visiblePages[0] > 1;
+  const showRightEllipsis = visiblePages[visiblePages.length - 1] < totalPages;
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+    onPageChange(page);
+  };
+
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            href="#"
+            text="Anterior"
             onClick={(e) => {
               e.preventDefault();
-              onConfirm();
+              handlePageChange(currentPage - 1);
             }}
-            disabled={deleting}
-          >
-            {deleting ? (
-              <>
-                <Spinner />
-                Eliminando
-              </>
-            ) : (
-              <>Eliminar</>
-            )}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+            aria-disabled={currentPage === 1}
+            className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+          />
+        </PaginationItem>
+
+        {showLeftEllipsis && (
+          <PaginationItem>
+            <PaginationEllipsis />
+          </PaginationItem>
+        )}
+
+        {visiblePages.map((p) => (
+          <PaginationItem key={p}>
+            <PaginationLink
+              href="#"
+              isActive={p === currentPage}
+              onClick={(e) => {
+                e.preventDefault();
+                handlePageChange(p);
+              }}
+            >
+              {p}
+            </PaginationLink>
+          </PaginationItem>
+        ))}
+
+        {showRightEllipsis && (
+          <PaginationItem>
+            <PaginationEllipsis />
+          </PaginationItem>
+        )}
+
+        <PaginationItem>
+          <PaginationNext
+            href="#"
+            text="Siguiente"
+            onClick={(e) => {
+              e.preventDefault();
+              handlePageChange(currentPage + 1);
+            }}
+            aria-disabled={currentPage === totalPages}
+            className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
   );
 }

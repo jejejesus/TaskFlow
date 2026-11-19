@@ -1,0 +1,2 @@
+- Development secrets (DB connection string, JWT issuer/audience/secret key) are stored via `dotnet user-secrets` rather than checked-in config files.
+- Each child maintains its own README with setup instructions; the root README only coordinates prerequisites and the end-to-end startup flow.

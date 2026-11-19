@@ -18,6 +18,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -165,5 +175,52 @@ export default function ProjectFormDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function DeleteDialog({
+  project,
+  onOpenChange,
+  onConfirm,
+  deleting,
+}: {
+  project: ProjectResponse | null;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  deleting: boolean;
+}) {
+  return (
+    <AlertDialog open={Boolean(project)} onOpenChange={onOpenChange}>
+      <AlertDialogContent size="sm">
+        <AlertDialogHeader>
+          <AlertDialogTitle>¿Eliminar proyecto?</AlertDialogTitle>
+          <AlertDialogDescription>
+            El proyecto {project?.name} se eliminará de manera permanente. No habrá vuelta atrás.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel variant="outline" disabled={deleting}>
+            Cancelar
+          </AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            onClick={(e) => {
+              e.preventDefault();
+              onConfirm();
+            }}
+            disabled={deleting}
+          >
+            {deleting ? (
+              <>
+                <Spinner />
+                Eliminando
+              </>
+            ) : (
+              <>Eliminar</>
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

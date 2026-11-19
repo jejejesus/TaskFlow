@@ -1,0 +1,1 @@
+Top-level TaskFlow repository wiring an ASP.NET Core backend API and a Next.js web frontend around a shared PostgreSQL database with JWT authentication.

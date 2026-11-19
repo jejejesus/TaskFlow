@@ -129,59 +129,6 @@ function PageContent() {
     setQueryParams((prev) => ({ ...prev, Page: newPage }));
   }
 
-  let content = (
-    <>
-      <TaskFormDialog
-        key={editingTask?.id}
-        open={taskFormDialogState}
-        onOpenChange={(open) => {
-          setTaskFormDialogState(open);
-          if (!open) setEditingTask(null);
-        }}
-        task={editingTask}
-        onSaved={handleTaskSaved}
-      />
-
-      <Tabs value={currentView} onValueChange={handleViewChange}>
-        <TabsList>
-          <TabsTrigger value="kanban">
-            <HugeiconsIcon icon={KanbanIcon} strokeWidth={2} />
-            Kanban
-          </TabsTrigger>
-          <TabsTrigger value="list">
-            <HugeiconsIcon icon={ListIcon} strokeWidth={2} />
-            Lista
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="kanban">
-          <TasksKanbanBoard />
-        </TabsContent>
-        <TabsContent value="list">
-          <TaskList
-            tasks={tasks}
-            loading={loading}
-            queryParams={queryParams}
-            onEdit={handleEditTask}
-            onDelete={handleTaskDeleted}
-            onSaved={handleTaskSaved}
-            onQueryChange={handleQueryChange}
-            onPageChange={handlePageChange}
-          />
-        </TabsContent>
-      </Tabs>
-    </>
-  );
-
-  if (error) {
-    content = (
-      <Alert variant="destructive" className="max-w-md">
-        <HugeiconsIcon icon={AlertCircleIcon} strokeWidth={2} size={30} />
-        <AlertTitle>Error al cargar tareas</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
-
   return (
     <main className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
       <header className="flex justify-between">
@@ -203,7 +150,54 @@ function PageContent() {
         )}
       </header>
 
-      {content}
+      {error ? (
+        <Alert variant="destructive" className="max-w-md">
+          <HugeiconsIcon icon={AlertCircleIcon} strokeWidth={2} size={30} />
+          <AlertTitle>Error al cargar tareas</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : (
+        <>
+          <TaskFormDialog
+            key={editingTask?.id}
+            open={taskFormDialogState}
+            onOpenChange={(open) => {
+              setTaskFormDialogState(open);
+              if (!open) setEditingTask(null);
+            }}
+            task={editingTask}
+            onSaved={handleTaskSaved}
+          />
+
+          <Tabs value={currentView} onValueChange={handleViewChange}>
+            <TabsList>
+              <TabsTrigger value="kanban">
+                <HugeiconsIcon icon={KanbanIcon} strokeWidth={2} />
+                Kanban
+              </TabsTrigger>
+              <TabsTrigger value="list">
+                <HugeiconsIcon icon={ListIcon} strokeWidth={2} />
+                Lista
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="kanban">
+              <TasksKanbanBoard />
+            </TabsContent>
+            <TabsContent value="list">
+              <TaskList
+                tasks={tasks}
+                loading={loading}
+                queryParams={queryParams}
+                onEdit={handleEditTask}
+                onDelete={handleTaskDeleted}
+                onSaved={handleTaskSaved}
+                onQueryChange={handleQueryChange}
+                onPageChange={handlePageChange}
+              />
+            </TabsContent>
+          </Tabs>
+        </>
+      )}
     </main>
   );
 }

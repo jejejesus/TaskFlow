@@ -1,0 +1,5 @@
+- Cross-layer contracts are expressed as interfaces in `Services.Application/Interfaces/{Services,Repositories}` and implemented in `Services.Infrastructure`, keeping the API and domain layers free of infrastructure types.
+- Dependency injection registration is centralized in static extension methods (`AddApplication`, `AddInfrastructure`) that take `IServiceCollection` and return it, rather than scattered `services.AddScoped` calls across files.
+- Configuration values are loaded via strongly-typed options classes (e.g. `JwtOptions`) bound from `IConfiguration.GetSection`, with explicit null/length validation throwing `InvalidOperationException` at startup.
+- Domain modeling uses value objects (sealed or immutable classes like `Email`, `ProjectName`, `TaskTitle`) alongside entity classes and plain enums to encapsulate invariants at the domain boundary.
+- DTOs are organized by feature folder under `Services.Application/DTOs/{Auth,Projects,Tasks}` mirroring the controller/resource layout, with a shared `PagedResponse<T>` for list endpoints.

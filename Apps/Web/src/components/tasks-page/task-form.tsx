@@ -10,7 +10,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -52,6 +61,7 @@ export default function TaskFormDialog({
   open,
   onOpenChange,
   task,
+  onSaved,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -124,6 +134,7 @@ export default function TaskFormDialog({
         description: saved.title,
         type: "success",
       });
+      onSaved?.(saved);
     } catch (cause: unknown) {
       toast.add({
         title: "Error al guardar la tarea",
@@ -271,5 +282,52 @@ export default function TaskFormDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function DeleteDialog({
+  task,
+  onOpenChange,
+  onConfirm,
+  deleting,
+}: {
+  task: TaskResponse | null;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  deleting: boolean;
+}) {
+  return (
+    <AlertDialog open={Boolean(task)} onOpenChange={onOpenChange}>
+      <AlertDialogContent size="sm">
+        <AlertDialogHeader>
+          <AlertDialogTitle>¿Eliminar tarea?</AlertDialogTitle>
+          <AlertDialogDescription>
+            La tarea {task?.title} se eliminará de manera permanente. No habrá vuelta atrás.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel variant="outline" disabled={deleting}>
+            Cancelar
+          </AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            onClick={(e) => {
+              e.preventDefault();
+              onConfirm();
+            }}
+            disabled={deleting}
+          >
+            {deleting ? (
+              <>
+                <Spinner />
+                Eliminando
+              </>
+            ) : (
+              <>Eliminar</>
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

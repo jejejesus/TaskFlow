@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: ""
+title: TaskFlow Task & Project Management Platform
+scope:
+    - README.md
+    - .gitignore
+source_files: []
+depends_on: []
+related_to: []

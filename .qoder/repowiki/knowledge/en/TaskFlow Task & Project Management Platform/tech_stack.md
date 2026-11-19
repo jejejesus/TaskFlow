@@ -1,0 +1,1 @@
+.NET 10 + EF Core + PostgreSQL for the backend; Next.js 16 + pnpm for the frontend; JWT bearer tokens for cross-service auth; Scalar/OpenAPI for API docs.

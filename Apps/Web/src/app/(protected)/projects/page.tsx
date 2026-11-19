@@ -54,38 +54,6 @@ export default function Page() {
     setProjects((prev) => prev.filter((p) => p.id !== projectId));
   }
 
-  let content = (
-    <>
-      <ProjectFormDialog
-        key={editingProject?.id}
-        open={projectFormDialogState}
-        onOpenChange={(open) => {
-          setProjectFormDialogState(open);
-          if (!open) setEditingProject(null);
-        }}
-        project={editingProject}
-        onSaved={handleProjectSaved}
-      />
-
-      <ProjectsList
-        projects={projects}
-        loading={loading}
-        onEdit={handleEditProject}
-        onDelete={handleProjectDeleted}
-      />
-    </>
-  );
-
-  if (error) {
-    content = (
-      <Alert variant="destructive" className="max-w-md">
-        <HugeiconsIcon icon={AlertCircleIcon} strokeWidth={2} size={30} />
-        <AlertTitle>Error al cargar projectos</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
-
   return (
     <main className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
       <header className="flex justify-between">
@@ -107,7 +75,33 @@ export default function Page() {
         )}
       </header>
 
-      {content}
+      {error ? (
+        <Alert variant="destructive" className="max-w-md">
+          <HugeiconsIcon icon={AlertCircleIcon} strokeWidth={2} size={30} />
+          <AlertTitle>Error al cargar projectos</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : (
+        <>
+          <ProjectFormDialog
+            key={editingProject?.id}
+            open={projectFormDialogState}
+            onOpenChange={(open) => {
+              setProjectFormDialogState(open);
+              if (!open) setEditingProject(null);
+            }}
+            project={editingProject}
+            onSaved={handleProjectSaved}
+          />
+
+          <ProjectsList
+            projects={projects}
+            loading={loading}
+            onEdit={handleEditProject}
+            onDelete={handleProjectDeleted}
+          />
+        </>
+      )}
     </main>
   );
 }

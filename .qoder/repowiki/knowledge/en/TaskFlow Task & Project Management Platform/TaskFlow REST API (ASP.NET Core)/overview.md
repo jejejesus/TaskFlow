@@ -1,0 +1,1 @@
+ASP.NET Core 10 REST API for TaskFlow providing user authentication, project and task CRUD with JWT bearer auth, EF Core + PostgreSQL persistence, and Scalar/OpenAPI documentation.

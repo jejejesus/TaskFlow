@@ -21,7 +21,7 @@ import {
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
-import DeleteDialog from "./delete-dialog";
+import { DeleteDialog } from "./project-form";
 
 export default function ProjectsList({
   projects,
@@ -127,7 +127,7 @@ export default function ProjectsList({
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
                           render={
-                            <Link href={`/projects/${project.id}`}>
+                            <Link href={`/projects/${project.id}?view=kanban`}>
                               <HugeiconsIcon icon={ViewIcon} />
                               Ver
                             </Link>
@@ -149,7 +149,7 @@ export default function ProjectsList({
                     </DropdownMenu>
                   </CardAction>
                   <CardTitle>
-                    <Link className="hover:underline" href={`/projects/${project.id}`}>
+                    <Link className="hover:underline" href={`/projects/${project.id}?view=kanban`}>
                       {project.name}
                     </Link>
                   </CardTitle>
