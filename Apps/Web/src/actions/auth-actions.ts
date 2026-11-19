@@ -2,11 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-
-if (process.env.NODE_ENV !== "production") {
-  // Allow self-signed certificates in local development (e.g. ASP.NET dev certs)
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-}
+import { fetchServerApi } from "@/lib/api/fetch-server";
 
 export type AuthActionState = {
   success?: boolean;
@@ -44,12 +40,9 @@ async function setAuthCookies(token: string, expiresAtString?: string) {
 
 export async function loginAction(
   prevStateOrFormData: AuthActionState | FormData | null,
-  formDataMaybe?: FormData
+  formDataMaybe?: FormData,
 ): Promise<AuthActionState> {
-  const formData =
-    prevStateOrFormData instanceof FormData
-      ? prevStateOrFormData
-      : formDataMaybe;
+  const formData = prevStateOrFormData instanceof FormData ? prevStateOrFormData : formDataMaybe;
 
   if (!formData) {
     return { success: false, error: "Datos del formulario no válidos." };
@@ -68,7 +61,7 @@ export async function loginAction(
   let shouldRedirect = false;
 
   try {
-    const response = await fetch(getApiEndpoint("login"), {
+    const response = await fetchServerApi(getApiEndpoint("login"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -117,12 +110,9 @@ export async function loginAction(
 
 export async function signupAction(
   prevStateOrFormData: AuthActionState | FormData | null,
-  formDataMaybe?: FormData
+  formDataMaybe?: FormData,
 ): Promise<AuthActionState> {
-  const formData =
-    prevStateOrFormData instanceof FormData
-      ? prevStateOrFormData
-      : formDataMaybe;
+  const formData = prevStateOrFormData instanceof FormData ? prevStateOrFormData : formDataMaybe;
 
   if (!formData) {
     return { success: false, error: "Datos del formulario no válidos." };
@@ -149,7 +139,7 @@ export async function signupAction(
   let shouldRedirect = false;
 
   try {
-    const response = await fetch(getApiEndpoint("register"), {
+    const response = await fetchServerApi(getApiEndpoint("register"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -201,9 +191,4 @@ export async function logoutAction(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete("auth_token");
   redirect("/login");
-}
-
-export async function getAuthToken(): Promise<string | undefined> {
-  const cookieStore = await cookies();
-  return cookieStore.get("auth_token")?.value;
 }

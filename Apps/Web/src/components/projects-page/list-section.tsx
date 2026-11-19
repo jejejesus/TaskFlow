@@ -1,4 +1,7 @@
-import { ApiError, ProjectResponse, projectsApi } from "@/lib/api/projects";
+"use client";
+
+import type { ProjectResponse } from "@/lib/api/projects";
+import { deleteProjectAction } from "@/actions/data-actions";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "../ui/empty";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +39,8 @@ export default function ProjectsList({
 }) {
   const [projectToDelete, setProjectToDelete] = useState<ProjectResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [expired, setExpired] = useState(false);
 
   async function handleConfirmDelete() {
     if (!projectToDelete || deleting) return;
@@ -43,24 +48,19 @@ export default function ProjectsList({
     setDeleting(true);
 
     try {
-      await projectsApi.remove(projectToDelete.id);
-
-      toast.add({
-        title: "Proyecto eliminado",
-        type: "success",
-      });
-
-      onDelete?.(projectToDelete.id);
-    } catch (cause: unknown) {
-      toast.add({
-        title: "Error al eliminar el proyecto",
-        description: cause instanceof ApiError ? cause.message : "No se pudo eliminar el proyecto.",
-        type: "error",
-        priority: "high",
-      });
+      const result = await deleteProjectAction(projectToDelete.id);
+      if (!result.success) {
+        setError(result.error);
+        setExpired(result.status === 401);
+        return;
+      }
+      toast.add({ title: "Proyecto eliminado", type: "success" });
+      onDelete(projectToDelete.id);
+      setProjectToDelete(null);
+    } catch {
+      setError("No se pudo eliminar el proyecto.");
     } finally {
       setDeleting(false);
-      setProjectToDelete(null);
     }
   }
 
@@ -101,10 +101,13 @@ export default function ProjectsList({
             onOpenChange={(open) => {
               if (!open) {
                 setProjectToDelete(null);
+                setError(null);
               }
             }}
             onConfirm={handleConfirmDelete}
             deleting={deleting}
+            error={error}
+            expired={expired}
           />
 
           <div className="flex flex-wrap gap-3">
@@ -140,7 +143,11 @@ export default function ProjectsList({
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           variant="destructive"
-                          onClick={() => setProjectToDelete(project)}
+                          onClick={() => {
+                            setError(null);
+                            setExpired(false);
+                            setProjectToDelete(project);
+                          }}
                         >
                           <HugeiconsIcon icon={Delete02Icon} />
                           Eliminar

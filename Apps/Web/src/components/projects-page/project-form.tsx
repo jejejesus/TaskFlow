@@ -1,12 +1,8 @@
 "use client";
 
-import {
-  ApiError,
-  CreateProjectRequest,
-  ProjectResponse,
-  projectsApi,
-  UpdateProjectRequest,
-} from "@/lib/api/projects";
+import { CreateProjectRequest, ProjectResponse } from "@/lib/api/projects";
+import { saveProjectAction } from "@/actions/data-actions";
+import { SessionExpired } from "@/components/session-expired";
 import { SubmitEvent, useEffect, useState } from "react";
 import { toast } from "@/components/ui/toast";
 import {
@@ -48,6 +44,8 @@ export default function ProjectFormDialog({
 }) {
   const isEditing = Boolean(project);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [expired, setExpired] = useState(false);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -56,6 +54,8 @@ export default function ProjectFormDialog({
   useEffect(() => {
     if (!open) return;
     setSubmitting(false);
+    setError(null);
+    setExpired(false);
     if (project) {
       setName(project.name);
       setDescription(project.description ?? "");
@@ -73,34 +73,30 @@ export default function ProjectFormDialog({
 
     setSubmitting(true);
 
-    const payload: CreateProjectRequest | UpdateProjectRequest = {
+    const payload: CreateProjectRequest = {
       name: name,
       description: description,
       color: color,
     };
 
     try {
-      const saved = project
-        ? await projectsApi.update(project.id, payload)
-        : await projectsApi.create(payload);
-
+      const result = await saveProjectAction(project?.id ?? null, payload);
+      if (!result.success) {
+        setError(result.error);
+        setExpired(result.status === 401);
+        return;
+      }
       toast.add({
         title: isEditing ? "Proyecto editado" : "Proyecto creado",
-        description: saved.name,
+        description: result.data.name,
         type: "success",
       });
-
-      onSaved?.(saved);
-    } catch (cause: unknown) {
-      toast.add({
-        title: "Error al guardar el proyecto",
-        description: cause instanceof ApiError ? cause.message : "No se pudo guardar el proyecto.",
-        type: "error",
-        priority: "high",
-      });
+      onSaved?.(result.data);
+      onOpenChange(false);
+    } catch {
+      setError("No se pudo guardar el proyecto.");
     } finally {
       setSubmitting(false);
-      onOpenChange(false);
     }
   }
 
@@ -117,6 +113,12 @@ export default function ProjectFormDialog({
             </DialogDescription>
           </DialogHeader>
 
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          {expired && <SessionExpired />}
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="name">
@@ -183,11 +185,15 @@ export function DeleteDialog({
   onOpenChange,
   onConfirm,
   deleting,
+  error,
+  expired,
 }: {
   project: ProjectResponse | null;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   deleting: boolean;
+  error?: string | null;
+  expired?: boolean;
 }) {
   return (
     <AlertDialog open={Boolean(project)} onOpenChange={onOpenChange}>
@@ -198,6 +204,12 @@ export function DeleteDialog({
             El proyecto {project?.name} se eliminará de manera permanente. No habrá vuelta atrás.
           </AlertDialogDescription>
         </AlertDialogHeader>
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        {expired && <SessionExpired />}
         <AlertDialogFooter>
           <AlertDialogCancel variant="outline" disabled={deleting}>
             Cancelar

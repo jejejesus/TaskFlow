@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-if (process.env.NODE_ENV !== "production") {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-}
+import { fetchServerApi } from "@/lib/api/fetch-server";
 
 const API_BASE_URL = process.env.API_BASE_URL || "https://localhost:7120/api";
 
@@ -39,7 +36,7 @@ async function proxyHandler(
   }
 
   try {
-    const apiResponse = await fetch(targetUrl, {
+    const apiResponse = await fetchServerApi(targetUrl, {
       method: request.method,
       headers: headers,
       body: body,

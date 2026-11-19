@@ -1,203 +1,47 @@
-"use client";
-
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import {
-  GetTasksQuery,
-  TaskAllowedSortFields,
-  tasksApi,
-  ApiError,
-  TaskResponse,
-  PagedResponse,
-} from "@/lib/api/tasks";
-import TaskList from "@/components/tasks-page/list-section";
-import { Button } from "@/components/ui/button";
+import { Suspense } from "react";
+import { CheckListIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Add01Icon,
-  CheckListIcon,
-  ListIcon,
-  KanbanIcon,
-  AlertCircleIcon,
-} from "@hugeicons/core-free-icons";
-import TaskFormDialog from "@/components/tasks-page/task-form";
+import TaskWorkspace from "@/components/tasks-page/task-workspace";
+import { serverTasks } from "@/lib/api/server";
+import { ApiError } from "@/lib/api/helper";
+import { parseTaskRoute, type RouteSearchParams } from "@/lib/task-query";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import TasksKanbanBoard from "@/components/tasks-page/kanban-section";
-
-type ViewMode = "kanban" | "list";
-
-export default function Page() {
-  return (
-    <Suspense>
-      <PageContent />
-    </Suspense>
-  );
+async function TasksData({ searchParams }: { searchParams: Promise<RouteSearchParams> }) {
+  const { view, query } = parseTaskRoute(await searchParams);
+  if (view !== "list") return <TaskWorkspace view={view} query={query} tasks={null} />;
+  try {
+    const tasks = await serverTasks.list(query);
+    return <TaskWorkspace view={view} query={query} tasks={tasks} />;
+  } catch (error) {
+    return (
+      <TaskWorkspace
+        view={view}
+        query={query}
+        tasks={null}
+        error={{
+          message: error instanceof ApiError ? error.message : "No se pudieron cargar las tareas.",
+          status: error instanceof ApiError ? error.status : undefined,
+        }}
+      />
+    );
+  }
 }
 
-function PageContent() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const viewParam = searchParams.get("view");
-  const currentView: ViewMode = viewParam === "list" ? "list" : "kanban";
-
-  const [tasks, setTasks] = useState<PagedResponse<TaskResponse>>({
-    items: [],
-    page: 1,
-    pageSize: 10,
-    totalCount: 1,
-    totalPages: 1,
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [queryParams, setQueryParams] = useState<GetTasksQuery>({
-    Page: 1,
-    PageSize: 10,
-    Status: undefined,
-    Priority: undefined,
-    SortBy: TaskAllowedSortFields.CreatedAt,
-    SortDirection: "asc",
-  });
-
-  const [taskFormDialogState, setTaskFormDialogState] = useState(false);
-  const [editingTask, setEditingTask] = useState<TaskResponse | null>(null);
-
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-
-    tasksApi
-      .list(queryParams)
-      .then((response) => setTasks(response))
-      .catch((cause: unknown) => {
-        setError(cause instanceof ApiError ? cause.message : "No se pudieron cargar las tareas.");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [queryParams]);
-
-  function handleViewChange(newView: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("view", newView);
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }
-
-  function handleCreateTask() {
-    setEditingTask(null);
-    setTaskFormDialogState(true);
-  }
-
-  function handleEditTask(task: TaskResponse) {
-    setEditingTask(task);
-    setTaskFormDialogState(true);
-  }
-
-  function handleTaskSaved(saved: TaskResponse) {
-    setTasks((prev) => {
-      const exists = prev.items.some((t) => t.id === saved.id);
-
-      const newItems = exists
-        ? prev.items.map((t) => (t.id === saved.id ? saved : t))
-        : [saved, ...prev.items];
-
-      return {
-        ...prev,
-        items: newItems,
-      };
-    });
-  }
-
-  function handleTaskDeleted(taskId: string) {
-    setTasks((prev) => ({
-      ...prev,
-      items: prev.items.filter((t) => t.id !== taskId),
-      totalCount: (prev.totalCount ?? 0) - 1,
-    }));
-  }
-
-  function handleQueryChange(updates: Partial<GetTasksQuery>) {
-    setQueryParams((prev) => ({ ...prev, ...updates }));
-  }
-
-  function handlePageChange(newPage: number) {
-    if (newPage < 1 || newPage > tasks.totalPages || newPage === queryParams.Page) return;
-    setQueryParams((prev) => ({ ...prev, Page: newPage }));
-  }
-
+export default function Page({ searchParams }: { searchParams: Promise<RouteSearchParams> }) {
   return (
     <main className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
-      <header className="flex justify-between">
-        <div className="w-full">
-          <h1 className="flex gap-2 text-2xl font-semibold tracking-tight">
-            <HugeiconsIcon icon={CheckListIcon} strokeWidth={2} size={30} />
-            Mis tareas
-          </h1>
-          <p className="text-muted-foreground">
-            Gestiona tus tareas y mantén el enfoque en lo importante.
-          </p>
-        </div>
-
-        {!error && (
-          <Button onClick={handleCreateTask}>
-            <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
-            Crear tarea
-          </Button>
-        )}
+      <header>
+        <h1 className="flex gap-2 text-2xl font-semibold tracking-tight">
+          <HugeiconsIcon icon={CheckListIcon} size={30} />
+          Mis tareas
+        </h1>
+        <p className="text-muted-foreground">
+          Gestiona tus tareas y mantén el enfoque en lo importante.
+        </p>
       </header>
-
-      {error ? (
-        <Alert variant="destructive" className="max-w-md">
-          <HugeiconsIcon icon={AlertCircleIcon} strokeWidth={2} size={30} />
-          <AlertTitle>Error al cargar tareas</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ) : (
-        <>
-          <TaskFormDialog
-            key={editingTask?.id}
-            open={taskFormDialogState}
-            onOpenChange={(open) => {
-              setTaskFormDialogState(open);
-              if (!open) setEditingTask(null);
-            }}
-            task={editingTask}
-            onSaved={handleTaskSaved}
-          />
-
-          <Tabs value={currentView} onValueChange={handleViewChange}>
-            <TabsList>
-              <TabsTrigger value="kanban">
-                <HugeiconsIcon icon={KanbanIcon} strokeWidth={2} />
-                Kanban
-              </TabsTrigger>
-              <TabsTrigger value="list">
-                <HugeiconsIcon icon={ListIcon} strokeWidth={2} />
-                Lista
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="kanban">
-              <TasksKanbanBoard />
-            </TabsContent>
-            <TabsContent value="list">
-              <TaskList
-                tasks={tasks}
-                loading={loading}
-                queryParams={queryParams}
-                onEdit={handleEditTask}
-                onDelete={handleTaskDeleted}
-                onSaved={handleTaskSaved}
-                onQueryChange={handleQueryChange}
-                onPageChange={handlePageChange}
-              />
-            </TabsContent>
-          </Tabs>
-        </>
-      )}
+      <Suspense fallback={<p role="status">Cargando tareas...</p>}>
+        <TasksData searchParams={searchParams} />
+      </Suspense>
     </main>
   );
 }

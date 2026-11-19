@@ -23,14 +23,9 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  CreateTaskRequest,
-  TaskPriority,
-  TaskResponse,
-  tasksApi,
-  UpdateTaskRequest,
-} from "@/lib/api/tasks";
-import { ApiError } from "@/lib/api/helper";
+import { CreateTaskRequest, TaskPriority, TaskResponse } from "@/lib/api/tasks";
+import { saveTaskAction } from "@/actions/data-actions";
+import { SessionExpired } from "@/components/session-expired";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -61,15 +56,19 @@ export default function TaskFormDialog({
   open,
   onOpenChange,
   task,
+  defaultProjectId,
   onSaved,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task?: TaskResponse | null;
+  defaultProjectId?: string;
   onSaved?: (task: TaskResponse) => void;
 }) {
   const isEditing = Boolean(task);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [expired, setExpired] = useState(false);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -80,32 +79,22 @@ export default function TaskFormDialog({
   useEffect(() => {
     if (!open) return;
     setSubmitting(false);
+    setError(null);
+    setExpired(false);
     if (task) {
       setTitle(task.title);
       setDescription(task.description ?? "");
       setProjectId(task.projectId ?? "");
       setPriority(task.priority);
-      setDueDate(task.dueDate ?? undefined);
+      setDueDate(task.dueDate ? new Date(task.dueDate) : undefined);
     } else {
       setTitle("");
       setDescription("");
+      setProjectId(defaultProjectId ?? "");
       setPriority(TaskPriority.Low);
+      setDueDate(undefined);
     }
-
-    /*projectsApi
-      .list()
-      .then((response) => setProjects(response))
-      .catch((cause: unknown) =>
-        toast.add({
-          title: "Error al cargar los proyectos",
-          description:
-            cause instanceof ApiError ? cause.message : "No se pudieron cargar los proyectos.",
-          type: "error",
-          priority: "high",
-        }),
-      )
-      .finally(() => setLoading(false));*/
-  }, [open, task]);
+  }, [open, task, defaultProjectId]);
 
   let priorities = Object.entries(priorityLabels).map(([key, label]) => ({
     value: key,
@@ -118,33 +107,32 @@ export default function TaskFormDialog({
 
     setSubmitting(true);
 
-    const payload: CreateTaskRequest | UpdateTaskRequest = {
+    const payload: CreateTaskRequest = {
       title: title,
       description: description,
       projectId: projectId === "" ? null : projectId,
       priority: priority,
-      dueDate: dueDate ?? null,
+      dueDate: dueDate?.toISOString() ?? null,
     };
 
     try {
-      const saved = task ? await tasksApi.update(task.id, payload) : await tasksApi.create(payload);
-
+      const result = await saveTaskAction(task?.id ?? null, payload);
+      if (!result.success) {
+        setError(result.error);
+        setExpired(result.status === 401);
+        return;
+      }
       toast.add({
         title: isEditing ? "Tarea editada" : "Tarea creada",
-        description: saved.title,
+        description: result.data.title,
         type: "success",
       });
-      onSaved?.(saved);
-    } catch (cause: unknown) {
-      toast.add({
-        title: "Error al guardar la tarea",
-        description: cause instanceof ApiError ? cause.message : "No se pudo guardar la tarea.",
-        type: "error",
-        priority: "high",
-      });
+      onSaved?.(result.data);
+      onOpenChange(false);
+    } catch {
+      setError("No se pudo guardar la tarea.");
     } finally {
       setSubmitting(false);
-      onOpenChange(false);
     }
   }
 
@@ -161,6 +149,12 @@ export default function TaskFormDialog({
             </DialogDescription>
           </DialogHeader>
 
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          {expired && <SessionExpired />}
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="title">
@@ -186,32 +180,6 @@ export default function TaskFormDialog({
                 disabled={submitting}
               />
             </Field>
-
-            {/*<Field>
-              <FieldLabel htmlFor="project">Proyecto</FieldLabel>
-              <Select
-                items={[
-                  { value: "", label: "Sin proyecto" },
-                  ...projects.map((p) => ({ value: String(p.id), label: p.name })),
-                ]}
-                value={projectId}
-                onValueChange={(value) => setProjectId(value ?? "")}
-              >
-                <SelectTrigger id="project" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent alignItemWithTrigger>
-                  <SelectGroup>
-                    <SelectItem value="">Sin proyecto</SelectItem>
-                    {projects.map(({ id, name }) => (
-                      <SelectItem key={id} value={String(id)}>
-                        {name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </Field>*/}
 
             <Field className="max-w-40">
               <FieldLabel htmlFor="priority">Prioridad</FieldLabel>
@@ -290,11 +258,15 @@ export function DeleteDialog({
   onOpenChange,
   onConfirm,
   deleting,
+  error,
+  expired,
 }: {
   task: TaskResponse | null;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   deleting: boolean;
+  error?: string | null;
+  expired?: boolean;
 }) {
   return (
     <AlertDialog open={Boolean(task)} onOpenChange={onOpenChange}>
@@ -305,6 +277,12 @@ export function DeleteDialog({
             La tarea {task?.title} se eliminará de manera permanente. No habrá vuelta atrás.
           </AlertDialogDescription>
         </AlertDialogHeader>
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        {expired && <SessionExpired />}
         <AlertDialogFooter>
           <AlertDialogCancel variant="outline" disabled={deleting}>
             Cancelar

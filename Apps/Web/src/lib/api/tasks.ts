@@ -43,7 +43,7 @@ export interface TaskResponse {
   description: string | null;
   status: TaskCurrentStatus;
   priority: TaskPriority;
-  dueDate: Date | null;
+  dueDate: string | null;
   projectId: string | null;
   projectName: string | null;
   projectColor: string | null;
@@ -55,7 +55,7 @@ export interface CreateTaskRequest {
   title: string;
   description: string | null;
   priority: TaskPriority;
-  dueDate: Date | null;
+  dueDate: string | null;
   projectId: string | null;
 }
 
@@ -63,7 +63,7 @@ export interface UpdateTaskRequest {
   title: string;
   description: string | null;
   priority: TaskPriority;
-  dueDate: Date | null;
+  dueDate: string | null;
   projectId: string | null;
 }
 
@@ -81,6 +81,19 @@ export interface GetTasksQuery {
   SortDirection?: "asc" | "desc";
 }
 
+export function buildTaskQuery(query: GetTasksQuery = {}): string {
+  const params = new URLSearchParams();
+  if (query.Page !== undefined) params.set("Page", String(query.Page));
+  if (query.PageSize !== undefined) params.set("PageSize", String(query.PageSize));
+  if (query.Status !== undefined) params.set("Status", String(query.Status));
+  if (query.Priority !== undefined) params.set("Priority", String(query.Priority));
+  if (query.Search) params.set("Search", query.Search);
+  if (query.SortBy) params.set("SortBy", query.SortBy);
+  if (query.SortDirection) params.set("SortDirection", query.SortDirection);
+  const value = params.toString();
+  return value ? `?${value}` : "";
+}
+
 // ============================================
 // Servicio de Tasks
 // ============================================
@@ -93,17 +106,9 @@ export const tasksApi = {
 
   /** GET /api/tasks */
   list(query: GetTasksQuery = {}): Promise<PagedResponse<TaskResponse>> {
-    const params = new URLSearchParams();
-    if (query.Page !== undefined) params.set("Page", String(query.Page));
-    if (query.PageSize !== undefined) params.set("PageSize", String(query.PageSize));
-    if (query.Status !== undefined) params.set("Status", String(query.Status));
-    if (query.Priority !== undefined) params.set("Priority", String(query.Priority));
-    if (query.Search) params.set("Search", query.Search);
-    if (query.SortBy) params.set("SortBy", String(query.SortBy));
-    if (query.SortDirection) params.set("SortDirection", query.SortDirection);
-
-    const qs = params.toString();
-    return apiFetch<PagedResponse<TaskResponse>>(`/tasks${qs ? `?${qs}` : ""}`, { method: "GET" });
+    return apiFetch<PagedResponse<TaskResponse>>(`/tasks${buildTaskQuery(query)}`, {
+      method: "GET",
+    });
   },
 
   /** GET /api/tasks/{id} */

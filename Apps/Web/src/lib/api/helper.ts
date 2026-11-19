@@ -18,6 +18,7 @@ export class ApiError extends Error {
 }
 
 export interface ProblemDetails {
+  error?: string | null;
   type?: string | null;
   title?: string | null;
   status?: number | null;
@@ -32,18 +33,18 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     headers.set("Content-Type", "application/json");
   }
 
-  const res = await fetch(`/api${path}`, {
-    ...init,
-    headers,
-    cache: "no-store",
-  });
-
-  if (res.status === 200 && res.headers.get("content-length") === "0") {
-    return undefined as T;
+  let res: Response;
+  try {
+    res = await fetch(`/api${path}`, { ...init, headers, cache: "no-store" });
+  } catch {
+    throw new ApiError(0, "No se pudo conectar con el servidor.");
   }
+  return parseApiResponse<T>(res);
+}
 
+export async function parseApiResponse<T>(res: Response): Promise<T> {
   const contentType = res.headers.get("content-type") ?? "";
-  const isJson = contentType.includes("application/json");
+  const isJson = contentType.includes("application/json") || contentType.includes("+json");
 
   if (!res.ok) {
     let details: ProblemDetails | undefined;
@@ -51,16 +52,16 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
       try {
         details = (await res.json()) as ProblemDetails;
       } catch {
-        /* ignore */
+        // The API may return an empty or malformed error response.
       }
     }
     throw new ApiError(
       res.status,
-      details?.title ?? details?.detail ?? `Request failed (${res.status})`,
+      details?.error ?? details?.detail ?? details?.title ?? `Error de servidor (${res.status}).`,
       details,
     );
   }
 
-  if (res.status === 204) return undefined as T;
-  return (isJson ? await res.json() : (undefined as T)) as T;
+  if (res.status === 204 || res.headers.get("content-length") === "0") return undefined as T;
+  return (isJson ? await res.json() : undefined) as T;
 }

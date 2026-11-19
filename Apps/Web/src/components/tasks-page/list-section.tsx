@@ -1,4 +1,9 @@
-import { useEffect, useState } from "react";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { deleteTaskAction, saveTaskAction } from "@/actions/data-actions";
+import { LocalDate } from "@/components/local-date";
+import { SessionExpired } from "@/components/session-expired";
 import {
   Table,
   TableBody,
@@ -34,12 +39,11 @@ import {
   taskSortFieldLabels,
 } from "@/lib/util-constants/tasks-constants";
 import {
-  ApiError,
   CreateTaskRequest,
   GetTasksQuery,
   PagedResponse,
   TaskResponse,
-  tasksApi,
+  TaskAllowedSortFields,
 } from "@/lib/api/tasks";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "../ui/empty";
 import { Spinner } from "@/components/ui/spinner";
@@ -55,7 +59,6 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import { ButtonGroup } from "@/components/ui/button-group";
-import {} from "@hugeicons/core-free-icons";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -68,15 +71,6 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { DeleteDialog } from "./task-form";
-
-function formatDate(value: Date | null) {
-  if (!value) return "Sin fecha límite";
-  return new Intl.DateTimeFormat("es-MX", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(value));
-}
 
 export default function TasksList({
   tasks,
@@ -99,6 +93,8 @@ export default function TasksList({
 }) {
   const [taskToDelete, setTaskToDelete] = useState<TaskResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [expired, setExpired] = useState(false);
 
   async function handleDuplicateTask(task: TaskResponse) {
     const duplicated: CreateTaskRequest = {
@@ -110,18 +106,23 @@ export default function TasksList({
     };
 
     try {
-      let saved = await tasksApi.create(duplicated);
-
-      toast.add({
-        title: "Tarea dupliada",
-        type: "success",
-      });
-
-      onSaved?.(saved);
-    } catch (cause: unknown) {
+      const result = await saveTaskAction(null, duplicated);
+      if (!result.success) {
+        setExpired(result.status === 401);
+        toast.add({
+          title: "Error al duplicar la tarea",
+          description: result.error,
+          type: "error",
+          priority: "high",
+        });
+        return;
+      }
+      toast.add({ title: "Tarea duplicada", type: "success" });
+      onSaved?.(result.data);
+    } catch {
       toast.add({
         title: "Error al duplicar la tarea",
-        description: cause instanceof ApiError ? cause.message : "No se pudo duplicar la tarea.",
+        description: "No se pudo duplicar la tarea.",
         type: "error",
         priority: "high",
       });
@@ -134,30 +135,26 @@ export default function TasksList({
     setDeleting(true);
 
     try {
-      await tasksApi.remove(taskToDelete.id);
-
-      toast.add({
-        title: "Tarea eliminada",
-        type: "success",
-      });
-
-      onDelete?.(taskToDelete.id);
-    } catch (cause: unknown) {
-      toast.add({
-        title: "Error al eliminar la tarea",
-        description: cause instanceof ApiError ? cause.message : "No se pudo eliminar la tarea.",
-        type: "error",
-        priority: "high",
-      });
+      const result = await deleteTaskAction(taskToDelete.id);
+      if (!result.success) {
+        setDeleteError(result.error);
+        setExpired(result.status === 401);
+        return;
+      }
+      toast.add({ title: "Tarea eliminada", type: "success" });
+      onDelete(taskToDelete.id);
+      setTaskToDelete(null);
+    } catch {
+      setDeleteError("No se pudo eliminar la tarea.");
     } finally {
       setDeleting(false);
-      setTaskToDelete(null);
     }
   }
 
   return (
     <section className="flex flex-1 flex-col gap-6">
       <TaskQuery queryParams={queryParams} onQueryChange={onQueryChange} />
+      {expired && !taskToDelete && <SessionExpired />}
 
       {!loading && tasks.items.length <= 0 ? (
         <Empty>
@@ -187,10 +184,13 @@ export default function TasksList({
             onOpenChange={(open) => {
               if (!open) {
                 setTaskToDelete(null);
+                setDeleteError(null);
               }
             }}
             onConfirm={handleConfirmDelete}
             deleting={deleting}
+            error={deleteError}
+            expired={expired}
           />
 
           <Table>
@@ -233,12 +233,19 @@ export default function TasksList({
                       {priorityLabels[task.priority] ?? "Desconocido"}
                     </Badge>
                   </TableCell>
-                  <TableCell>{formatDate(task.dueDate)}</TableCell>
+                  <TableCell>
+                    <LocalDate value={task.dueDate} />
+                  </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         render={
-                          <Button variant="ghost" size="icon" className="size-8">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                            aria-label={`Acciones de ${task.title}`}
+                          >
                             <HugeiconsIcon icon={MoreVerticalIcon} strokeWidth={2} />
                           </Button>
                         }
@@ -255,7 +262,10 @@ export default function TasksList({
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           variant="destructive"
-                          onClick={() => setTaskToDelete(task)}
+                          onClick={() => {
+                            setDeleteError(null);
+                            setTaskToDelete(task);
+                          }}
                         >
                           <HugeiconsIcon icon={Delete02Icon} />
                           Eliminar
@@ -285,6 +295,12 @@ export function TaskQuery({
   onQueryChange: (updates: Partial<GetTasksQuery>) => void;
 }) {
   const [searchInput, setSearchInput] = useState(queryParams.Search ?? "");
+  const latestQuery = useRef(queryParams.Search ?? "");
+  const latestChange = useRef(onQueryChange);
+  useEffect(() => {
+    latestQuery.current = queryParams.Search ?? "";
+    latestChange.current = onQueryChange;
+  }, [queryParams.Search, onQueryChange]);
 
   useEffect(() => {
     setSearchInput(queryParams.Search ?? "");
@@ -292,8 +308,8 @@ export function TaskQuery({
 
   useEffect(() => {
     const handle = setTimeout(() => {
-      if ((queryParams.Search ?? "") !== searchInput) {
-        onQueryChange({ Search: searchInput || undefined, Page: 1 });
+      if (latestQuery.current !== searchInput) {
+        latestChange.current({ Search: searchInput || undefined, Page: 1 });
       }
     }, 300);
     return () => clearTimeout(handle);
@@ -318,7 +334,7 @@ export function TaskQuery({
   const sortByValue = queryParams.SortBy ?? undefined;
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       <Field className="w-full max-w-72">
         <FieldLabel>Buscar</FieldLabel>
         <ButtonGroup>
@@ -409,7 +425,7 @@ export function TaskQuery({
           <Select
             value={sortByValue}
             onValueChange={(value) => {
-              onQueryChange({ SortBy: value as any, Page: 1 });
+              onQueryChange({ SortBy: value as TaskAllowedSortFields, Page: 1 });
             }}
           >
             <SelectTrigger className="w-full">

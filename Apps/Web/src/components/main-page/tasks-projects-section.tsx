@@ -5,15 +5,7 @@ import { TaskResponse } from "@/lib/api/tasks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { statusLabels, statusStyles } from "@/lib/util-constants/tasks-constants";
 import { Badge } from "@/components/ui/badge";
-
-function formatDate(value: Date | null) {
-  if (!value) return "Sin fecha límite";
-  return new Intl.DateTimeFormat("es-MX", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(value));
-}
+import { LocalDate } from "@/components/local-date";
 
 export default function TaskProjects({
   tasks,
@@ -57,7 +49,7 @@ export default function TaskProjects({
           ) : tasks.length === 0 ? (
             <p className="py-6 text-sm text-muted-foreground">
               Todavía no hay tareas.{" "}
-              <Link href="/tasks" className="text-primary hover:underline">
+              <Link href="/my-tasks?view=list" className="text-primary hover:underline">
                 Crea tu primera tarea.
               </Link>
             </p>
@@ -71,7 +63,7 @@ export default function TaskProjects({
                   <div className="min-w-0">
                     <p className="truncate font-medium">{task.title}</p>
                     <p className="text-sm text-muted-foreground">
-                      Vencimiento: {formatDate(task.dueDate)}
+                      Vencimiento: <LocalDate value={task.dueDate} />
                     </p>
                   </div>
                   <Badge className={statusStyles[task.status] ?? "bg-muted text-muted-foreground"}>
