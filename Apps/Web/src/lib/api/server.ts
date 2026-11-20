@@ -33,6 +33,21 @@ export async function serverApiFetch<T>(path: string, init: RequestInit = {}): P
   return parseApiResponse<T>(response);
 }
 
+async function listAllTaskPages(
+  fetchPage: (query: GetTasksQuery) => Promise<PagedResponse<TaskResponse>>,
+): Promise<TaskResponse[]> {
+  const items: TaskResponse[] = [];
+  let page = 1;
+  let totalPages: number;
+  do {
+    const response = await fetchPage({ Page: page, PageSize: 100 });
+    items.push(...response.items);
+    totalPages = response.totalPages;
+    page++;
+  } while (page <= totalPages);
+  return items;
+}
+
 export const serverTasks = {
   list(query: GetTasksQuery = {}) {
     return serverApiFetch<PagedResponse<TaskResponse>>(`/tasks${buildTaskQuery(query)}`);
@@ -41,6 +56,12 @@ export const serverTasks = {
     return serverApiFetch<PagedResponse<TaskResponse>>(
       `/projects/${encodeURIComponent(id)}/tasks${buildTaskQuery(query)}`,
     );
+  },
+  listAll(): Promise<TaskResponse[]> {
+    return listAllTaskPages((query) => serverTasks.list(query));
+  },
+  forProjectAll(id: string): Promise<TaskResponse[]> {
+    return listAllTaskPages((query) => serverTasks.forProject(id, query));
   },
 };
 

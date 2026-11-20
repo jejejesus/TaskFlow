@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api/helper";
-import { TaskPriority } from "@/lib/api/tasks";
+import { TaskCurrentStatus, TaskPriority } from "@/lib/api/tasks";
 
 const mocks = vi.hoisted(() => ({ fetch: vi.fn(), revalidate: vi.fn() }));
 vi.mock("@/lib/api/server", () => ({ serverApiFetch: mocks.fetch }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidate }));
 import {
+  changeTaskStatusAction,
   deleteProjectAction,
   deleteTaskAction,
   saveProjectAction,
@@ -46,6 +47,53 @@ describe("mutation actions", () => {
       "/projects",
       "/projects/[projectSlug]",
     ]);
+  });
+
+  it.each([TaskCurrentStatus.Todo, TaskCurrentStatus.InProgress, TaskCurrentStatus.Done])(
+    "changes task status to %s and revalidates affected paths",
+    async (status) => {
+      const response = { id, status };
+      mocks.fetch.mockResolvedValue(response);
+
+      expect(await changeTaskStatusAction(id, status)).toEqual({ success: true, data: response });
+      expect(mocks.fetch).toHaveBeenCalledExactlyOnceWith(`/tasks/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
+      expect(mocks.revalidate.mock.calls).toEqual([
+        ["/", "page"],
+        ["/my-tasks", "page"],
+        ["/projects", "page"],
+        ["/projects/[projectSlug]", "page"],
+      ]);
+    },
+  );
+
+  it("rejects invalid task IDs and statuses without calling the API", async () => {
+    for (const invalidId of ["bad-id", "", null, 123]) {
+      expect(
+        await changeTaskStatusAction(invalidId as string, TaskCurrentStatus.Todo),
+      ).toMatchObject({
+        success: false,
+      });
+    }
+    for (const invalidStatus of [0, 4, "1", "Todo", null, undefined]) {
+      expect(await changeTaskStatusAction(id, invalidStatus as TaskCurrentStatus)).toMatchObject({
+        success: false,
+      });
+    }
+    expect(mocks.fetch).not.toHaveBeenCalled();
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+  });
+
+  it("propagates authorization errors when changing status without revalidating", async () => {
+    mocks.fetch.mockRejectedValue(new ApiError(401, "Sesión expirada"));
+    expect(await changeTaskStatusAction(id, TaskCurrentStatus.Done)).toEqual({
+      success: false,
+      status: 401,
+      error: "Sesión expirada",
+    });
+    expect(mocks.revalidate).not.toHaveBeenCalled();
   });
 
   it("returns authorization and conflict errors without invalidating", async () => {

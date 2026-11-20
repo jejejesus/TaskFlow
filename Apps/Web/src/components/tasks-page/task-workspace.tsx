@@ -20,6 +20,7 @@ export default function TaskWorkspace({
   view,
   query,
   tasks,
+  kanbanTasks,
   error,
   projectId,
   showCreate = true,
@@ -27,6 +28,7 @@ export default function TaskWorkspace({
   view: ViewMode;
   query: GetTasksQuery;
   tasks: PagedResponse<TaskResponse> | null;
+  kanbanTasks?: TaskResponse[] | null;
   error?: ListError | null;
   projectId?: string;
   showCreate?: boolean;
@@ -52,13 +54,20 @@ export default function TaskWorkspace({
   );
 
   useEffect(() => {
-    if (tasks && (query.Page ?? 1) > Math.max(1, tasks.totalPages)) {
+    if (view === "kanban" && searchString && searchString !== "view=kanban") {
+      latestSearch.current = "view=kanban";
+      router.replace(`${pathname}?view=kanban`, { scroll: false });
+    }
+  }, [view, searchString, pathname, router]);
+
+  useEffect(() => {
+    if (view === "list" && tasks && (query.Page ?? 1) > Math.max(1, tasks.totalPages)) {
       updateQuery({ Page: Math.max(1, tasks.totalPages) });
     }
-  }, [tasks, query.Page, updateQuery]);
+  }, [view, tasks, query.Page, updateQuery]);
 
   function changeView(value: string) {
-    const params = new URLSearchParams(latestSearch.current);
+    const params = new URLSearchParams(value === "kanban" ? "" : latestSearch.current);
     params.set("view", value);
     latestSearch.current = params.toString();
     router.replace(`${pathname}?${latestSearch.current}`, { scroll: false });
@@ -107,7 +116,27 @@ export default function TaskWorkspace({
           </TabsTrigger>
         </TabsList>
         <TabsContent value="kanban">
-          <TasksKanbanBoard />
+          {error ? (
+            error.status === 401 ? (
+              <SessionExpired />
+            ) : (
+              <Alert variant="destructive" role="alert">
+                <AlertTitle>Error al cargar tareas</AlertTitle>
+                <AlertDescription>{error.message}</AlertDescription>
+              </Alert>
+            )
+          ) : (
+            kanbanTasks && (
+              <TasksKanbanBoard
+                tasks={kanbanTasks}
+                onEdit={(task) => {
+                  setEditing(task);
+                  setOpen(true);
+                }}
+                onSaved={() => router.refresh()}
+              />
+            )
+          )}
         </TabsContent>
         <TabsContent value="list">
           {error ? (

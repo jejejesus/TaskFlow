@@ -67,8 +67,26 @@ describe.skipIf(!enabled)("production HTTP rendering", () => {
       }
       if (url.pathname === "/api/tasks" || url.pathname === `/api/projects/${project.id}/tasks`) {
         const page = Number(url.searchParams.get("Page") ?? 1);
+        const pageSize = Number(url.searchParams.get("PageSize") ?? 10);
+        const items =
+          pageSize === 100
+            ? Array.from({ length: page === 1 ? 100 : 1 }, (_, index) => {
+                const number = (page - 1) * 100 + index + 1;
+                return {
+                  ...task,
+                  id: `f711199a-567b-4567-9abc-${String(number).padStart(12, "0")}`,
+                  title: number === 1 ? task.title : `Tarea ${name} ${number}`,
+                };
+              })
+            : [task];
         res.end(
-          JSON.stringify({ items: [task], page, pageSize: 10, totalCount: 11, totalPages: 2 }),
+          JSON.stringify({
+            items,
+            page,
+            pageSize,
+            totalCount: pageSize === 100 ? 101 : 11,
+            totalPages: 2,
+          }),
         );
         return;
       }
@@ -149,13 +167,21 @@ describe.skipIf(!enabled)("production HTTP rendering", () => {
     expect(project).toContain("Proyecto Alfa");
     expect(project).toContain("Tarea Alfa");
     expect(calls).toHaveLength(2);
+    calls.length = 0;
+    const kanban = await fetch(
+      `${baseUrl}/projects/f711199a-567b-4567-9abc-0123456789ab?view=kanban`,
+      { headers: { cookie: "auth_token=one-secret" } },
+    ).then((res) => res.text());
+    expect(kanban).toContain("Proyecto Alfa");
+    expect(kanban).toContain("Tarea Alfa 101");
+    expect(calls).toHaveLength(3);
     const missing = await fetch(`${baseUrl}/projects/f711199a-567b-4567-9abc-0123456789ac`, {
       headers: { cookie: "auth_token=one-secret" },
     }).then((res) => res.text());
     expect(missing).toContain("404");
   });
 
-  it("renders list filters on the server and skips task requests for Kanban", async () => {
+  it("renders task data for the list and Kanban views", async () => {
     calls.length = 0;
     const list = await fetch(`${baseUrl}/my-tasks?view=list&page=2&status=3`, {
       headers: { cookie: "auth_token=one-secret" },
@@ -165,9 +191,16 @@ describe.skipIf(!enabled)("production HTTP rendering", () => {
     expect(calls[0].path).toContain("Page=2");
     expect(calls[0].path).toContain("Status=3");
     calls.length = 0;
-    await fetch(`${baseUrl}/my-tasks?view=kanban`, {
+    const kanban = await fetch(`${baseUrl}/my-tasks?view=kanban&page=2&status=3&search=otro`, {
       headers: { cookie: "auth_token=one-secret" },
     }).then((res) => res.text());
-    expect(calls).toHaveLength(0);
+    expect(kanban).toContain("Tarea Alfa");
+    expect(kanban).toContain("Tarea Alfa 101");
+    expect(kanban).toContain("Pendiente");
+    expect(calls).toHaveLength(2);
+    expect(calls.map((call) => call.path)).toEqual([
+      "/api/tasks?Page=1&PageSize=100",
+      "/api/tasks?Page=2&PageSize=100",
+    ]);
   });
 });

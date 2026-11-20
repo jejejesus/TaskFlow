@@ -197,7 +197,6 @@ export default function TasksList({
             <TableHeader>
               <TableRow>
                 <TableHead>Tarea</TableHead>
-                <TableHead>Proyecto</TableHead>
                 <TableHead>Estatus</TableHead>
                 <TableHead>Prioridad</TableHead>
                 <TableHead>Vencimiento</TableHead>
@@ -208,17 +207,6 @@ export default function TasksList({
               {tasks.items.map((task) => (
                 <TableRow key={task.id}>
                   <TableCell className="font-medium">{task.title}</TableCell>
-                  <TableCell>
-                    {task.projectName && (
-                      <Badge className="py-3 pr-3" variant="secondary">
-                        <span
-                          className="size-3 shrink-0 rounded-full"
-                          style={{ backgroundColor: task.projectColor || "#6366F1" }}
-                        />
-                        {task.projectName}
-                      </Badge>
-                    )}
-                  </TableCell>
                   <TableCell>
                     <Badge
                       className={statusStyles[task.status] ?? "bg-muted text-muted-foreground"}

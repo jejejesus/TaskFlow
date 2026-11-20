@@ -7,26 +7,35 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/actions/auth-actions", () => ({ logoutAction: vi.fn() }));
 const mocks = vi.hoisted(() => ({
   tasks: vi.fn(),
+  allTasks: vi.fn(),
   projectTasks: vi.fn(),
+  allProjectTasks: vi.fn(),
   projects: vi.fn(),
   project: vi.fn(),
   notFound: vi.fn(),
 }));
 vi.mock("@/lib/api/server", () => ({
-  serverTasks: { list: mocks.tasks, forProject: mocks.projectTasks },
+  serverTasks: {
+    list: mocks.tasks,
+    listAll: mocks.allTasks,
+    forProject: mocks.projectTasks,
+    forProjectAll: mocks.allProjectTasks,
+  },
   serverProjects: { list: mocks.projects, get: mocks.project },
 }));
 vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
 vi.mock("@/components/tasks-page/task-workspace", () => ({
   default: ({
     tasks,
+    kanbanTasks,
     error,
   }: {
     tasks: { items: { title: string }[] } | null;
+    kanbanTasks?: { title: string }[] | null;
     error?: { message: string } | null;
   }) => (
     <div>
-      {tasks?.items.map((item) => (
+      {(kanbanTasks ?? tasks?.items)?.map((item) => (
         <p key={item.title}>{item.title}</p>
       ))}
       {error?.message}
@@ -75,7 +84,7 @@ describe("server-rendered routes", () => {
     expect(mocks.projects).toHaveBeenCalledTimes(1);
   });
 
-  it("loads tasks only in list mode and passes validated filters", async () => {
+  it("loads tasks in list and kanban modes and passes validated filters", async () => {
     mocks.tasks.mockResolvedValue(page);
     const list = await html(
       <TasksPage searchParams={Promise.resolve({ view: "list", page: "2", status: "3" })} />,
@@ -83,8 +92,30 @@ describe("server-rendered routes", () => {
     expect(list).toContain("Tarea del servidor");
     expect(mocks.tasks).toHaveBeenCalledWith(expect.objectContaining({ Page: 2, Status: 3 }));
     mocks.tasks.mockClear();
-    await html(<TasksPage searchParams={Promise.resolve({ view: "kanban" })} />);
+    mocks.allTasks.mockResolvedValue(page.items);
+    const kanban = await html(
+      <TasksPage
+        searchParams={Promise.resolve({ view: "kanban", page: "2", status: "3", search: "otro" })}
+      />,
+    );
+    expect(kanban).toContain("Tarea del servidor");
+    expect(mocks.allTasks).toHaveBeenCalledExactlyOnceWith();
     expect(mocks.tasks).not.toHaveBeenCalled();
+  });
+
+  it("loads project tasks for the kanban view", async () => {
+    mocks.project.mockResolvedValue({ id: "abc", name: "Proyecto visible" });
+    mocks.allProjectTasks.mockResolvedValue(page.items);
+    const markup = await html(
+      <ProjectPage
+        params={Promise.resolve({ projectSlug: "abc" })}
+        searchParams={Promise.resolve({ view: "kanban", page: "2", status: "3" })}
+      />,
+    );
+    expect(markup).toContain("Proyecto visible");
+    expect(markup).toContain("Tarea del servidor");
+    expect(mocks.allProjectTasks).toHaveBeenCalledExactlyOnceWith("abc");
+    expect(mocks.projectTasks).not.toHaveBeenCalled();
   });
 
   it("starts project and task requests together and keeps project visible on task failure", async () => {

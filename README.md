@@ -8,7 +8,8 @@ TaskFlow es una aplicación en desarrollo para organizar tareas y proyectos. El 
 - Creación, consulta, edición y eliminación de tareas y proyectos, y duplicación de tareas en la web. La API admite cambiar el estado y la asignación a un proyecto.
 - Búsqueda, filtros, ordenamiento y paginación de tareas; consulta de tareas y resumen por proyecto.
 - Dashboard y páginas de tareas, proyectos y detalle de proyecto.
-- Las vistas Kanban aún están vacías; selecciona **Lista** para consultar las tareas. La web todavía no ofrece controles para cambiar el estado o el proyecto de una tarea, y los botones de Google y Apple no implementan autenticación.
+- Vista Kanban con todas las tareas agrupadas por estatus y cambio de estatus mediante arrastre o selector.
+- Los botones de Google y Apple no implementan autenticación.
 
 ## Estructura
 

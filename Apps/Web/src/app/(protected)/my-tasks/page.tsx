@@ -5,11 +5,16 @@ import TaskWorkspace from "@/components/tasks-page/task-workspace";
 import { serverTasks } from "@/lib/api/server";
 import { ApiError } from "@/lib/api/helper";
 import { parseTaskRoute, type RouteSearchParams } from "@/lib/task-query";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { Spinner } from "@/components/ui/spinner";
 
 async function TasksData({ searchParams }: { searchParams: Promise<RouteSearchParams> }) {
   const { view, query } = parseTaskRoute(await searchParams);
-  if (view !== "list") return <TaskWorkspace view={view} query={query} tasks={null} />;
   try {
+    if (view === "kanban") {
+      const kanbanTasks = await serverTasks.listAll();
+      return <TaskWorkspace view={view} query={query} tasks={null} kanbanTasks={kanbanTasks} />;
+    }
     const tasks = await serverTasks.list(query);
     return <TaskWorkspace view={view} query={query} tasks={tasks} />;
   } catch (error) {
@@ -39,7 +44,18 @@ export default function Page({ searchParams }: { searchParams: Promise<RouteSear
           Gestiona tus tareas y mantén el enfoque en lo importante.
         </p>
       </header>
-      <Suspense fallback={<p role="status">Cargando tareas...</p>}>
+      <Suspense
+        fallback={
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Spinner />
+              </EmptyMedia>
+              <EmptyTitle>Cargando tareas...</EmptyTitle>
+            </EmptyHeader>
+          </Empty>
+        }
+      >
         <TasksData searchParams={searchParams} />
       </Suspense>
     </main>

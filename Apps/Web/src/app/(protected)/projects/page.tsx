@@ -4,6 +4,8 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { serverProjects } from "@/lib/api/server";
 import { DataError } from "@/components/data-error";
 import { ProjectsWorkspace } from "@/components/projects-page/projects-workspace";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { Spinner } from "@/components/ui/spinner";
 
 async function ProjectsData() {
   try {
@@ -26,7 +28,18 @@ export default function Page() {
           Agrupa tus tareas en proyectos y dale contexto a tu trabajo.
         </p>
       </header>
-      <Suspense fallback={<p role="status">Cargando proyectos...</p>}>
+      <Suspense
+        fallback={
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Spinner />
+              </EmptyMedia>
+              <EmptyTitle>Cargando proyectos...</EmptyTitle>
+            </EmptyHeader>
+          </Empty>
+        }
+      >
         <ProjectsData />
       </Suspense>
     </main>

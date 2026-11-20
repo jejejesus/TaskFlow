@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { ApiError } from "@/lib/api/helper";
 import { serverApiFetch } from "@/lib/api/server";
-import { TaskPriority, type CreateTaskRequest, type TaskResponse } from "@/lib/api/tasks";
+import {
+  TaskCurrentStatus,
+  TaskPriority,
+  type CreateTaskRequest,
+  type TaskResponse,
+} from "@/lib/api/tasks";
 import type { CreateProjectRequest, ProjectResponse } from "@/lib/api/projects";
 
 export type ActionResult<T> =
@@ -63,6 +68,31 @@ export async function saveTaskAction(
         dueDate: input.dueDate,
         projectId: input.projectId,
       }),
+    });
+    refreshData();
+    return { success: true, data };
+  } catch (cause) {
+    return errorResult(cause);
+  }
+}
+
+export async function changeTaskStatusAction(
+  id: string,
+  status: TaskCurrentStatus,
+): Promise<ActionResult<TaskResponse>> {
+  if (typeof id !== "string" || !guidPattern.test(id)) {
+    return { success: false, error: "El identificador de la tarea no es válido." };
+  }
+  if (
+    ![TaskCurrentStatus.Todo, TaskCurrentStatus.InProgress, TaskCurrentStatus.Done].includes(status)
+  ) {
+    return { success: false, error: "El estado de la tarea no es válido." };
+  }
+
+  try {
+    const data = await serverApiFetch<TaskResponse>(`/tasks/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
     });
     refreshData();
     return { success: true, data };

@@ -8,10 +8,16 @@ import { ProjectHeader } from "@/components/project-details-page/project-header"
 import TaskWorkspace from "@/components/tasks-page/task-workspace";
 import type { GetTasksQuery, PagedResponse, TaskResponse } from "@/lib/api/tasks";
 import type { ViewMode } from "@/lib/task-query";
+import { Spinner } from "@/components/ui/spinner";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 
 type Props = { params: Promise<{ projectSlug: string }>; searchParams: Promise<RouteSearchParams> };
 
-type TaskResult = { tasks: PagedResponse<TaskResponse> | null; error: unknown };
+type TaskResult = {
+  tasks: PagedResponse<TaskResponse> | null;
+  kanbanTasks: TaskResponse[] | null;
+  error: unknown;
+};
 
 async function ProjectTasks({
   result,
@@ -24,13 +30,14 @@ async function ProjectTasks({
   query: GetTasksQuery;
   projectId: string;
 }) {
-  const { tasks, error } = await result;
+  const { tasks, kanbanTasks, error } = await result;
   return (
     <TaskWorkspace
       view={view}
       query={query}
       projectId={projectId}
       tasks={tasks}
+      kanbanTasks={kanbanTasks}
       error={
         error
           ? {
@@ -48,13 +55,19 @@ async function ProjectData({ params, searchParams }: Props) {
   const [{ projectSlug }, routeParams] = await Promise.all([params, searchParams]);
   const { view, query } = parseTaskRoute(routeParams);
   const projectPromise = serverProjects.get(projectSlug);
-  const taskPromise: Promise<TaskResult> =
-    view === "list"
-      ? serverTasks.forProject(projectSlug, query).then(
-          (tasks) => ({ tasks, error: null }),
-          (error) => ({ tasks: null, error }),
-        )
-      : Promise.resolve({ tasks: null, error: null });
+  const taskPromise: Promise<TaskResult> = (
+    view === "kanban"
+      ? serverTasks.forProjectAll(projectSlug).then((kanbanTasks) => ({
+          tasks: null,
+          kanbanTasks,
+          error: null,
+        }))
+      : serverTasks.forProject(projectSlug, query).then((tasks) => ({
+          tasks,
+          kanbanTasks: null,
+          error: null,
+        }))
+  ).catch((error) => ({ tasks: null, kanbanTasks: null, error }));
   let project;
   try {
     project = await projectPromise;
@@ -75,7 +88,18 @@ async function ProjectData({ params, searchParams }: Props) {
 export default function Page(props: Props) {
   return (
     <main className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
-      <Suspense fallback={<p role="status">Cargando proyecto...</p>}>
+      <Suspense
+        fallback={
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Spinner />
+              </EmptyMedia>
+              <EmptyTitle>Cargando proyecto...</EmptyTitle>
+            </EmptyHeader>
+          </Empty>
+        }
+      >
         <ProjectData {...props} />
       </Suspense>
     </main>
